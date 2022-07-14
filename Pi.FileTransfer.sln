@@ -1,0 +1,37 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.3.32611.2
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Pi.FileTransfer.Api", "Pi.FileTransfer.Api\Pi.FileTransfer.Api.csproj", "{4706D8B6-A80B-490C-8B93-F917176AB331}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Pi.FileTransfer.Core", "Pi.FileTransfer.Core\Pi.FileTransfer.Core.csproj", "{8E48D8D5-69DA-4F48-A586-15AC5155332B}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Pi.FileTransfer.Infrastructure", "Pi.FileTransfer.Infrastructure\Pi.FileTransfer.Infrastructure.csproj", "{74FCAA4F-7C47-4323-84AD-3DCE7B75D401}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{4706D8B6-A80B-490C-8B93-F917176AB331}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4706D8B6-A80B-490C-8B93-F917176AB331}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4706D8B6-A80B-490C-8B93-F917176AB331}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4706D8B6-A80B-490C-8B93-F917176AB331}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8E48D8D5-69DA-4F48-A586-15AC5155332B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8E48D8D5-69DA-4F48-A586-15AC5155332B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8E48D8D5-69DA-4F48-A586-15AC5155332B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8E48D8D5-69DA-4F48-A586-15AC5155332B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{74FCAA4F-7C47-4323-84AD-3DCE7B75D401}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{74FCAA4F-7C47-4323-84AD-3DCE7B75D401}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{74FCAA4F-7C47-4323-84AD-3DCE7B75D401}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{74FCAA4F-7C47-4323-84AD-3DCE7B75D401}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {D93F72F8-6479-45A9-A039-ECA0490001DE}
+	EndGlobalSection
+EndGlobal
