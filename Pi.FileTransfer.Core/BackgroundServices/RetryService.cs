@@ -1,5 +1,6 @@
 ﻿using MediatR;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Pi.FileTransfer.Core.Commands;
 using Pi.FileTransfer.Core.Entities;
 using Pi.FileTransfer.Core.Interfaces;
@@ -16,12 +17,14 @@ public class RetryService : BackgroundService
     private readonly IFolderRepository _folderRepository;
     private readonly DataStore _transferStore;
     private readonly IMediator _mediator;
+    private readonly ILogger<RetryService> _logger;
 
-    public RetryService(IFolderRepository folderRepository, DataStore transferStore, IMediator mediator)
+    public RetryService(IFolderRepository folderRepository, DataStore transferStore, IMediator mediator, ILogger<RetryService> logger)
     {
         _folderRepository = folderRepository;
         _transferStore = transferStore;
         _mediator = mediator;
+        _logger = logger;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -43,6 +46,7 @@ public class RetryService : BackgroundService
 
     private async Task RetrySendingSegments(Folder folder, Destination destination)
     {
+        _logger.LogInformation($"Retry sending failed segments from folder '{folder.Name}' to '{destination.Name}'");
         await foreach(var failure in _transferStore.GetFailedSegments(folder, destination))
         {
             await _mediator.Send(new RetryTransferSegmentCommand(failure,destination,folder));
@@ -51,6 +55,7 @@ public class RetryService : BackgroundService
 
     private async Task RetrySendingReceipt(Folder folder, Destination destination)
     {
+        _logger.LogInformation($"Retry sending failed receipts from folder '{folder.Name}' to '{destination.Name}'");
         await foreach (var failure in _transferStore.GetFailedReceipts(folder, destination))
         {
             await _mediator.Send(new RetryTransferReceiptCommand(failure, destination, folder));

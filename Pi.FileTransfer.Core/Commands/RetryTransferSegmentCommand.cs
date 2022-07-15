@@ -51,7 +51,7 @@ public class RetryTransferSegmentCommand : IRequest<MediatR.Unit>
                 else
                 {
                     //file not bound to folder, delete all failed items
-                    _transferStore.DeleteFailedItemsOfFile(request.Destination, request.Folder, file);
+                    _transferStore.DeleteFailedItemsOfFile(request.Destination, request.Folder, request.FailedSegment.FileId);
                 }
             }
             catch (Exception ex)

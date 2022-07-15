@@ -1,20 +1,16 @@
-﻿using Microsoft.Extensions.Options;
-using Pi.FileTransfer.Core.Common;
+﻿using Microsoft.Extensions.Logging;
 using Pi.FileTransfer.Core.Interfaces;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Pi.FileTransfer.Core.Services;
 public class FileIndexer
 {
 	private readonly IFileSystem _fileSystem;
+	private readonly ILogger<FileIndexer> _logger;
 
-	public FileIndexer(IFileSystem fileSystem)
+	public FileIndexer(IFileSystem fileSystem, ILogger<FileIndexer> logger)
 	{
 		_fileSystem = fileSystem;
+		_logger = logger;
 	}
 
 	public void IndexFiles(Entities.Folder folder)
@@ -24,14 +20,24 @@ public class FileIndexer
 
 		var toDelete = existingFiles.Where(x => !currentFiles.Any(y => x.GetFullPath(folder) == y.file)).ToList();
 		var toAdd = currentFiles.Where(x => !existingFiles.Any(y => x.file == y.GetFullPath(folder))).ToList();
-		var toUpdate = existingFiles.Where(x => currentFiles.Any(y => x.GetFullPath(folder) == y.file && x.LastModified != y.lastModified)).ToList();
+		var toUpdate = currentFiles.Where(x => existingFiles.Any(y => y.GetFullPath(folder) == x.file && y.LastModified != x.lastModified)).ToList();
 
 		foreach (var file in toDelete)
-			folder.RemoveFile(file);
-
-		foreach(var file in toAdd)
 		{
-			folder.AddFile(file.file,file.lastModified);
+			_logger.RemoveFileFromIndex(file.RelativePath, folder.Name);
+			folder.RemoveFile(file);
+		}
+
+		foreach (var file in toAdd)
+		{
+			_logger.AddFileToIndex(file.file, folder.Name);
+			folder.AddFile(file.file, file.lastModified);
+		}
+
+		foreach (var file in toUpdate)
+		{
+			_logger.UpdateFileInIndex(file.file, folder.Name);
+			folder.UpdateFile(file.file, file.lastModified);
 		}
 	}
 }

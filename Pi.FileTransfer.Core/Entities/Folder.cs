@@ -29,13 +29,13 @@ public class Folder : EntityBase
         _files.Remove(file);
     }
 
-    public void AddFile(string path, DateTime lastModefied)
+    public void AddFile(string path, DateTime lastModified)
     {
         var entity = new Entities.File
         {
             Id = Guid.NewGuid(),
             Name = Path.GetFileNameWithoutExtension(path),
-            LastModified = lastModefied,
+            LastModified = lastModified,
             Extension = Path.GetExtension(path),
             RelativePath = path.Replace($"{this.FullName}{Path.DirectorySeparatorChar}", "")
         };
@@ -55,6 +55,16 @@ public class Folder : EntityBase
         {
             existing.LastModified = file.LastModified;
             Events.Add(new UpdateFileCommand(file, this));
+        }
+    }
+
+    public void UpdateFile(string path, DateTime lastModified)
+    {
+        var existing = _files.FirstOrDefault(x => x.GetFullPath(this) == path);
+        if (existing is not null)
+        {
+            existing.LastModified = lastModified;
+            Events.Add(new UpdateFileCommand(existing, this));
         }
     }
 }

@@ -9,19 +9,22 @@ namespace Pi.FileTransfer.Core;
 public static class LoggerExtensions
 {
     private static readonly Action<ILogger, string, Exception?> _searchReceipts;
-    private static readonly Action<ILogger, string,int,int, Exception?> _amountOfSegmentFilesPresent;
+    private static readonly Action<ILogger, string, int, int, Exception?> _amountOfSegmentFilesPresent;
     private static readonly Action<ILogger, string, Exception?> _buildingFile;
     private static readonly Action<ILogger, string, Exception?> _buildingFileFailed;
-    private static readonly Action<ILogger, string,int,int, Exception?> _segmentingFile;
-    private static readonly Action<ILogger, string,int,int, Exception?> _getSpecificSegment;
-    private static readonly Action<ILogger, string,int, Exception?> _buildFileInTemp;
+    private static readonly Action<ILogger, string, int, int, Exception?> _segmentingFile;
+    private static readonly Action<ILogger, string, int, int, Exception?> _getSpecificSegment;
+    private static readonly Action<ILogger, string, int, Exception?> _buildFileInTemp;
     private static readonly Action<ILogger, string, Exception?> _segmentFile;
-    private static readonly Action<ILogger,string,Exception?> _clearLastPosition;
-    private static readonly Action<ILogger,string,string,Exception?> _sendSegment;
-    private static readonly Action<ILogger,string,string,Exception?> _sendSegmentFailed;
+    private static readonly Action<ILogger, string, Exception?> _clearLastPosition;
+    private static readonly Action<ILogger, string, string, Exception?> _sendSegment;
+    private static readonly Action<ILogger, string, string, Exception?> _sendSegmentFailed;
     private static readonly Action<ILogger, string, string, Exception?> _sendReceipt;
     private static readonly Action<ILogger, string, string, Exception?> _sendReceiptFailed;
     private static readonly Action<ILogger, string, Exception?> _indexingFolder;
+    private static readonly Action<ILogger, string, string, Exception?> _removeFileFromIndex;
+    private static readonly Action<ILogger, string, string, Exception?> _addFileToIndex;
+    private static readonly Action<ILogger, string, string, Exception?> _updateFileInIndex;
 
     static LoggerExtensions()
     {
@@ -29,16 +32,19 @@ public static class LoggerExtensions
         _buildingFile = LoggerMessage.Define<string>(LogLevel.Information, new EventId(), "Building file {File}");
         _segmentFile = LoggerMessage.Define<string>(LogLevel.Information, new EventId(), "Segmenting file {File}");
         _clearLastPosition = LoggerMessage.Define<string>(LogLevel.Information, new EventId(), "Clearing last read position for '{File}'");
-        _sendSegment = LoggerMessage.Define<string,string>(LogLevel.Information, new EventId(), "Sending segment of file '{File}' to '{Destination}'");
-        _sendReceipt = LoggerMessage.Define<string,string>(LogLevel.Information, new EventId(), "Sending receipt of file '{File}' to '{Destination}'");
+        _sendSegment = LoggerMessage.Define<string, string>(LogLevel.Information, new EventId(), "Sending segment of file '{File}' to '{Destination}'");
+        _sendReceipt = LoggerMessage.Define<string, string>(LogLevel.Information, new EventId(), "Sending receipt of file '{File}' to '{Destination}'");
         _indexingFolder = LoggerMessage.Define<string>(LogLevel.Information, new EventId(), "Indexing folder '{Folder}'");
+      
 
         _buildingFileFailed = LoggerMessage.Define<string>(LogLevel.Error, new EventId(), "Building file {File} failed.");
-        _sendSegmentFailed = LoggerMessage.Define<string, string>(LogLevel.Debug, new EventId(), "Failed to send segment of file '{File}' to '{Destination}'");
-        _sendReceiptFailed = LoggerMessage.Define<string, string>(LogLevel.Debug, new EventId(), "Failed to send receipt of file '{File}' to '{Destination}'");
+        _sendSegmentFailed = LoggerMessage.Define<string, string>(LogLevel.Error, new EventId(), "Failed to send segment of file '{File}' to '{Destination}'");
+        _sendReceiptFailed = LoggerMessage.Define<string, string>(LogLevel.Error, new EventId(), "Failed to send receipt of file '{File}' to '{Destination}'");
 
-
-        _amountOfSegmentFilesPresent = LoggerMessage.Define<string,int,int>(LogLevel.Debug, new EventId(), "'{File}' exists out of {ExpectedAmountOfSegments}. {ActualAmountOfSegments} segment files are present");
+        _removeFileFromIndex = LoggerMessage.Define<string, string>(LogLevel.Debug, new EventId(), "Remove file '{File}' from folder '{Folder}' index");
+        _addFileToIndex = LoggerMessage.Define<string, string>(LogLevel.Debug, new EventId(), "Add file '{File}' to folder '{Folder}' index");
+        _updateFileInIndex = LoggerMessage.Define<string, string>(LogLevel.Debug, new EventId(), "Update file '{File}' in folder '{Folder}' index");
+        _amountOfSegmentFilesPresent = LoggerMessage.Define<string, int, int>(LogLevel.Debug, new EventId(), "'{File}' exists out of {ExpectedAmountOfSegments}. {ActualAmountOfSegments} segment files are present");
         _segmentingFile = LoggerMessage.Define<string, int, int>(LogLevel.Debug, new EventId(), "Segmenting file '{File}'. Segment: {SegmentCount}, BytesRead: {BytesRead}");
         _getSpecificSegment = LoggerMessage.Define<string, int, int>(LogLevel.Debug, new EventId(), "Getting segment for file '{File}'. Start: {Start}, End: {End}");
         _buildFileInTemp = LoggerMessage.Define<string, int>(LogLevel.Debug, new EventId(), "Building temp file '{File}' from {SegmentCount} segments");
@@ -46,16 +52,16 @@ public static class LoggerExtensions
 
     public static void SearchReceiptInFolder(this ILogger logger, string folderPath) => _searchReceipts(logger, folderPath, null);
 
-    public static void AmountOfSegmentFilesPresent(this ILogger logger, string file,int expectedAmountOfSegments, int ActualAmountOfSegments) 
-        => _amountOfSegmentFilesPresent(logger,file,expectedAmountOfSegments, ActualAmountOfSegments, null);
+    public static void AmountOfSegmentFilesPresent(this ILogger logger, string file, int expectedAmountOfSegments, int ActualAmountOfSegments)
+        => _amountOfSegmentFilesPresent(logger, file, expectedAmountOfSegments, ActualAmountOfSegments, null);
 
     public static void BuildingFile(this ILogger logger, string file) => _buildingFile(logger, file, null);
-    public static void BuildingFileFailed(this ILogger logger, string file,Exception exception) => _buildingFileFailed(logger, file, exception);
+    public static void BuildingFileFailed(this ILogger logger, string file, Exception exception) => _buildingFileFailed(logger, file, exception);
 
     public static void SegmentingFile(this ILogger logger, string file, int segmentCount, int bytesRead)
         => _segmentingFile(logger, file, segmentCount, bytesRead, null);
 
-    public static void GetSpecificSegment(this ILogger logger, string file,int start,int end)
+    public static void GetSpecificSegment(this ILogger logger, string file, int start, int end)
         => _getSpecificSegment(logger, file, start, end, null);
 
     public static void BuildFileInTemp(this ILogger logger, string file, int segmentCount)
@@ -67,18 +73,25 @@ public static class LoggerExtensions
     public static void ClearLastPosition(this ILogger logger, string file)
         => _clearLastPosition(logger, file, null);
 
-    public static void SendSegment(this ILogger logger, string file,string destination)
+    public static void SendSegment(this ILogger logger, string file, string destination)
         => _sendSegment(logger, file, destination, null);
 
-    public static void SendSegmentFailed(this ILogger logger, string file,string destination,Exception exception)
-        => _sendSegmentFailed(logger,file,destination, exception);
+    public static void SendSegmentFailed(this ILogger logger, string file, string destination, Exception exception)
+        => _sendSegmentFailed(logger, file, destination, exception);
 
     public static void SendReceipt(this ILogger logger, string file, string destination)
-    => _sendReceipt(logger, file, destination, null);
+        => _sendReceipt(logger, file, destination, null);
 
     public static void SendReceiptFailed(this ILogger logger, string file, string destination, Exception exception)
         => _sendReceiptFailed(logger, file, destination, exception);
 
     public static void IndexingFolder(this ILogger logger, string folder)
         => _indexingFolder(logger, folder, null);
+
+    public static void RemoveFileFromIndex(this ILogger logger, string file, string folder)
+        => _removeFileFromIndex(logger, file, folder, null);
+    public static void AddFileToIndex(this ILogger logger, string file, string folder)
+        => _addFileToIndex(logger, file, folder, null);
+    public static void UpdateFileInIndex(this ILogger logger, string file, string folder)
+        => _updateFileInIndex(logger, file, folder, null);
 }
