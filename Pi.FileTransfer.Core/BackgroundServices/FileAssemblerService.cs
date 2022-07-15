@@ -30,11 +30,11 @@ public class FileAssemblerService : BackgroundService
 				_logger.SearchReceiptInFolder(folder.FullName);
 				await foreach (var receipt in _transferStore.GetReceivedReceipts(folder))
 				{
-					var files = await _transferStore.GetReceivedSegmentsForFile(folder, receipt.FileId).ToListAsync(cancellationToken: stoppingToken);
+					var files = (await _transferStore.GetReceivedSegmentsForFile(folder, receipt.FileId).ToListAsync(cancellationToken: stoppingToken));
 					_logger.AmountOfSegmentFilesPresent(receipt.RelativePath, receipt.AmountOfSegments, files.Count);
 					if (receipt.AmountOfSegments == files.Count)
 					{
-						_ = await _mediator.Send(new AssembleFileCommand(folder, receipt, files), stoppingToken);
+						_ = await _mediator.Send(new AssembleFileCommand(folder, receipt, files!), stoppingToken);
 					}
 				}
 			}

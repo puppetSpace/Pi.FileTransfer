@@ -1,4 +1,5 @@
 ﻿using MediatR;
+using Microsoft.Extensions.Logging;
 using Pi.FileTransfer.Core.Entities;
 using Pi.FileTransfer.Core.Services;
 using System;
@@ -29,12 +30,14 @@ public class RetryTransferSegmentCommand : IRequest<MediatR.Unit>
         private readonly FileSegmentation _fileSegmentation;
         private readonly TransferService _transferService;
         private readonly DataStore _transferStore;
+        private readonly ILogger<RetryTransferSegmentCommand> _logger;
 
-        public RetryTransferSegmentCommandHandler(FileSegmentation fileSegmentation, TransferService transferService, DataStore transferStore)
+        public RetryTransferSegmentCommandHandler(FileSegmentation fileSegmentation, TransferService transferService, DataStore transferStore, ILogger<RetryTransferSegmentCommand> logger)
         {
             _fileSegmentation = fileSegmentation;
             _transferService = transferService;
             _transferStore = transferStore;
+            _logger = logger;
         }
 
         public async Task<Unit> Handle(RetryTransferSegmentCommand request, CancellationToken cancellationToken)
@@ -44,20 +47,20 @@ public class RetryTransferSegmentCommand : IRequest<MediatR.Unit>
             {
                 if (file is not null)
                 {
+                    _logger.RetryTransferSegment(request.FailedSegment.Sequencenumber,request.FailedSegment.FileId,request.Folder.Name,request.Destination.Name);
                     var buffer = await _fileSegmentation.GetSpecificSegment(request.Folder, file, request.FailedSegment.Range);
                     await _transferService.Send(request.Destination, new(request.FailedSegment.Sequencenumber, buffer, file.Id, request.Folder.Name));
                     _transferStore.DeleteFailedSegment(request.Destination, request.Folder, request.FailedSegment);
                 }
                 else
                 {
-                    //file not bound to folder, delete all failed items
+                    _logger.DeleteFailedItems(request.FailedSegment.FileId,request.Folder.Name);
                     _transferStore.DeleteFailedItemsOfFile(request.Destination, request.Folder, request.FailedSegment.FileId);
                 }
             }
             catch (Exception ex)
             {
-                //do nothing.
-                //todo log
+                _logger.FailedRetryTransferSegment(request.FailedSegment.Sequencenumber,request.FailedSegment.FileId,request.Folder.Name,request.Destination.Name,ex);
             }
 
             return Unit.Value;

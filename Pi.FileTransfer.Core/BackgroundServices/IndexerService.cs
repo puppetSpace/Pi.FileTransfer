@@ -43,7 +43,7 @@ public class IndexerService : BackgroundService
 
     private async Task IndexFolders()
     {
-        _logger.LogInformation("Indexing folders");
+        _logger.IndexingFolders();
         var foldersWithoutSyncFolder = _fileSystem.GetFoldersFromBasePath()
             .Where(x => !Directory.Exists(Path.Combine(x, Constants.RootDirectoryName)));
         foreach (var folder in foldersWithoutSyncFolder)
@@ -54,7 +54,7 @@ public class IndexerService : BackgroundService
 
     private async Task IndexFiles()
     {
-        _logger.LogInformation("Indexing files");
+        _logger.IndexingFiles();
         await foreach (var folder in _folderRepository.GetFolders())
         {
             await _mediator.Send(new IndexFilesCommand(folder));

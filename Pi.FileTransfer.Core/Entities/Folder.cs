@@ -54,7 +54,6 @@ public class Folder : EntityBase
         if (existing is not null)
         {
             existing.LastModified = file.LastModified;
-            Events.Add(new UpdateFileCommand(file, this));
         }
     }
 

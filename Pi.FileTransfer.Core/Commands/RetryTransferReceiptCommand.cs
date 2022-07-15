@@ -1,4 +1,5 @@
 ﻿using MediatR;
+using Microsoft.Extensions.Logging;
 using Pi.FileTransfer.Core.Entities;
 using Pi.FileTransfer.Core.Services;
 using System;
@@ -27,11 +28,13 @@ public class RetryTransferReceiptCommand : IRequest<Unit>
     {
         private readonly TransferService _transferService;
         private readonly DataStore _transferStore;
+        private readonly ILogger<RetryTransferReceiptCommand> _logger;
 
-        public RetryTransferReceiptCommandHandler(TransferService transferService, DataStore transferStore)
+        public RetryTransferReceiptCommandHandler(TransferService transferService, DataStore transferStore, ILogger<RetryTransferReceiptCommand> logger)
         {
             _transferService = transferService;
             _transferStore = transferStore;
+            _logger = logger;
         }
 
         public async Task<Unit> Handle(RetryTransferReceiptCommand request, CancellationToken cancellationToken)
@@ -41,6 +44,7 @@ public class RetryTransferReceiptCommand : IRequest<Unit>
                 var file = request.Folder.Files.SingleOrDefault(x => x.Id == request.FailedReceipt.FileId);
                 if (file is not null)
                 {
+                    _logger.RetryTransferReceipt(request.FailedReceipt.FileId,request.Folder.Name,request.Destination.Name);
                     await _transferService.SendReceipt(request.Destination, new TransferReceipt(request.FailedReceipt.FileId, file.RelativePath, request.FailedReceipt.TotalAmountOfSegments, request.Folder.Name));
                     _transferStore.DeleteFailedReceipt(request.Destination, request.Folder, request.FailedReceipt);
                 } 
@@ -48,8 +52,7 @@ public class RetryTransferReceiptCommand : IRequest<Unit>
             }
             catch (Exception ex)
             {
-                //do nothing.
-                //todo log
+                _logger.FailedRetryTransferReceipt(request.FailedReceipt.FileId,request.Folder.Name,request.Destination.Name,ex);
             }
 
             return Unit.Value;

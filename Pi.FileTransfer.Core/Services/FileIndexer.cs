@@ -15,29 +15,36 @@ public class FileIndexer
 
 	public void IndexFiles(Entities.Folder folder)
 	{
-		var existingFiles = folder.Files;
-		var currentFiles = _fileSystem.GetFiles(folder);
-
-		var toDelete = existingFiles.Where(x => !currentFiles.Any(y => x.GetFullPath(folder) == y.file)).ToList();
-		var toAdd = currentFiles.Where(x => !existingFiles.Any(y => x.file == y.GetFullPath(folder))).ToList();
-		var toUpdate = currentFiles.Where(x => existingFiles.Any(y => y.GetFullPath(folder) == x.file && y.LastModified != x.lastModified)).ToList();
-
-		foreach (var file in toDelete)
+		try
 		{
-			_logger.RemoveFileFromIndex(file.RelativePath, folder.Name);
-			folder.RemoveFile(file);
+			var existingFiles = folder.Files;
+			var currentFiles = _fileSystem.GetFiles(folder);
+
+			var toDelete = existingFiles.Where(x => !currentFiles.Any(y => x.GetFullPath(folder) == y.file)).ToList();
+			var toAdd = currentFiles.Where(x => !existingFiles.Any(y => x.file == y.GetFullPath(folder))).ToList();
+			var toUpdate = currentFiles.Where(x => existingFiles.Any(y => y.GetFullPath(folder) == x.file && y.LastModified != x.lastModified)).ToList();
+
+			foreach (var file in toDelete)
+			{
+				_logger.RemoveFileFromIndex(file.RelativePath, folder.Name);
+				folder.RemoveFile(file);
+			}
+
+			foreach (var file in toAdd)
+			{
+				_logger.AddFileToIndex(file.file, folder.Name);
+				folder.AddFile(file.file, file.lastModified);
+			}
+
+			foreach (var file in toUpdate)
+			{
+				_logger.UpdateFileInIndex(file.file, folder.Name);
+				folder.UpdateFile(file.file, file.lastModified);
+			}
 		}
-
-		foreach (var file in toAdd)
+		catch (Exception ex)
 		{
-			_logger.AddFileToIndex(file.file, folder.Name);
-			folder.AddFile(file.file, file.lastModified);
-		}
-
-		foreach (var file in toUpdate)
-		{
-			_logger.UpdateFileInIndex(file.file, folder.Name);
-			folder.UpdateFile(file.file, file.lastModified);
+			_logger.FailedToIndexFiles(folder.Name, ex);
 		}
 	}
 }
