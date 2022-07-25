@@ -4,7 +4,6 @@ using Pi.FileTransfer.Core.Services;
 using Pi.FileTransfer.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
-
 // Add services to the container.
 builder.Services.AddInfrastructure();
 builder.Services.AddCore(builder.Configuration);

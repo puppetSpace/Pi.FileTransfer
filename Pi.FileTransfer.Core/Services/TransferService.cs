@@ -24,7 +24,7 @@ public class TransferService
 
 	public async Task Send(Destination destination, TransferSegment data)
 	{
-		_logger.LogDebug($"Sending segment {data.Sequencenumber} of file with id {data.FileId} from folder {data.FolderName} to {destination.Address}");
+		_logger.SendSegment(data.Sequencenumber,data.FileId,data.FolderName,destination.Address);
 		var client = _clientFactory.CreateClient();
 		var response = await client.PostAsJsonAsync($"{destination.Address}/api/file/segment", data);
 		if (!response.IsSuccessStatusCode)
@@ -36,7 +36,7 @@ public class TransferService
 
     public async Task SendReceipt(Destination destination, TransferReceipt transferReceipt)
     {
-        _logger.LogDebug($"Sending receipt of file {transferReceipt.RelativePath} from folder {transferReceipt.FolderName} to {destination.Address}");
+        _logger.SendReceipt(transferReceipt.RelativePath,transferReceipt.FolderName,destination.Address);
         var client = _clientFactory.CreateClient();
         var response = await client.PostAsJsonAsync($"{destination.Address}/api/file/receipt", transferReceipt);
         if (!response.IsSuccessStatusCode)
