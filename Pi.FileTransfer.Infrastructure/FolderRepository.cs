@@ -29,7 +29,16 @@ public class FolderRepository : IFolderRepository
 		}
 	}
 
-	public async Task Save(Folder folder)
+    public async Task<Folder> GetFolder(string name)
+    {
+        var syncFolder = Directory.GetDirectories(_basePath).FirstOrDefault(x=>x.EndsWith(name,StringComparison.OrdinalIgnoreCase));
+		if (syncFolder is null)
+			return Folder.Empty;
+
+		return await BuildFolderEntityAsync(syncFolder);
+    }
+
+    public async Task Save(Folder folder)
 	{
 		await _locker.WaitAsync();
 		try

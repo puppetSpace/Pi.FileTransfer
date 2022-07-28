@@ -66,4 +66,6 @@ public class Folder : EntityBase
             Events.Add(new UpdateFileCommand(existing, this));
         }
     }
+
+    public static Folder Empty { get; } = new Folder("", "", new(), new());
 }

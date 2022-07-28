@@ -41,7 +41,7 @@ public class RetryService : BackgroundService
 
     private async Task RetrySendingSegments(Folder folder, Destination destination)
     {
-        _logger.RetrySendingSegments();
+        _logger.RetrySendingSegments(folder.Name,destination.Name);
         await foreach (var failure in _transferStore.GetFailedSegments(folder, destination))
         {
             _ = await _mediator.Send(new RetryTransferSegmentCommand(failure, destination, folder));
@@ -50,7 +50,7 @@ public class RetryService : BackgroundService
 
     private async Task RetrySendingReceipt(Folder folder, Destination destination)
     {
-        _logger.RetrySendingSegments();
+        _logger.RetrySendingReceipts(folder.Name,destination.Name);
         await foreach (var failure in _transferStore.GetFailedReceipts(folder, destination))
         {
             _ = await _mediator.Send(new RetryTransferReceiptCommand(failure, destination, folder));

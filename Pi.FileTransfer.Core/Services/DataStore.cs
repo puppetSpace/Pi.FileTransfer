@@ -45,6 +45,25 @@ public class DataStore
         }
     }
 
+    public async Task<int?> GetLastPosition(Entities.Folder folder, Destination destination, Guid fileId)
+    {
+        try
+        {
+            var path = Path.Combine(folder.FullName, Constants.RootDirectoryName, "Data", "Outgoing", destination.Name);
+            _fileSystem.CreateDirectory(path);
+
+            var transferFile = Path.Combine(path, fileId.ToString());
+            if (!System.IO.File.Exists(transferFile))
+                return null;
+
+            return await _fileSystem.GetContentOfFile<int>(transferFile);
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
     public async Task StoreFailedSegmentTransfer(Destination destination, Entities.Folder folder, Entities.File file, int sequencenumber, SegmentRange range)
     {
         try

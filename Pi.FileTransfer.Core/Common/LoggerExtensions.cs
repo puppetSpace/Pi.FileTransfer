@@ -42,14 +42,14 @@ public static partial class LoggerExtensionFileRetryService
     [LoggerMessage(
     EventId = 0,
     Level = LogLevel.Information,
-    Message = "Indexing folders")]
-    public static partial void RetrySendingSegments(this ILogger logger);
+    Message = "Retry sending segments of folder '{folder}' for destination '{destination}'")]
+    public static partial void RetrySendingSegments(this ILogger logger,string folder,string destination);
 
     [LoggerMessage(
     EventId = 1,
     Level = LogLevel.Information,
-    Message = "Indexing files")]
-    public static partial void RetrySendingReceipts(this ILogger logger);
+    Message = "Retry sending receipts of folder '{folder}' for destination '{destination}'")]
+    public static partial void RetrySendingReceipts(this ILogger logger, string folder, string destination);
 
 }
 

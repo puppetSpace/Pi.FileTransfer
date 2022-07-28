@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 namespace Pi.FileTransfer.Core.Interfaces;
 public interface IFolderRepository
 {
+    Task<Folder> GetFolder(string name);
     IAsyncEnumerable<Folder> GetFolders();
     Task Save(Folder folder);
 }
