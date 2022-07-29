@@ -24,7 +24,11 @@ public static class DependencyInjection
         services.AddTransient<FileSegmentation>();
         services.AddTransient<TransferService>();
         services.AddTransient<DataStore>();
-        services.AddHttpClient();
+        services.AddTransient<DeltaService>();
+        services.AddHttpClient(TransferService.HttpClientName, o =>
+        {
+            o.Timeout = TimeSpan.FromSeconds(5);
+        });
 
 
         services.AddHostedService<IndexerService>();

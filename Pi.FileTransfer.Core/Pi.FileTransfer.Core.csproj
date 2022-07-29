@@ -19,4 +19,10 @@
     <PackageReference Include="System.Net.Http.Json" Version="6.0.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Reference Include="Octodiff">
+      <HintPath>..\Octodiff.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
 </Project>

@@ -10,4 +10,10 @@
     <ProjectReference Include="..\Pi.FileTransfer.Infrastructure\Pi.FileTransfer.Infrastructure.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Reference Include="Octodiff">
+      <HintPath>..\Octodiff.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
 </Project>

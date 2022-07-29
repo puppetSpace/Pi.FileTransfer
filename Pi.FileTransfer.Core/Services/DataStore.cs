@@ -239,7 +239,7 @@ public class DataStore
         }
     }
 
-    internal void DeleteFailedItemsOfFile(Destination destination, Folder folder, Guid fileId)
+    public void DeleteFailedItemsOfFile(Destination destination, Folder folder, Guid fileId)
     {
         try
         {
@@ -260,7 +260,7 @@ public class DataStore
         }
     }
 
-    internal void DeleteFailedSegment(Destination destination, Folder folder, FailedSegment failedSegment)
+    public void DeleteFailedSegment(Destination destination, Folder folder, FailedSegment failedSegment)
     {
         try
         {
@@ -278,7 +278,7 @@ public class DataStore
         }
     }
 
-    internal void DeleteFailedReceipt(Destination destination, Folder folder, FailedReceipt failedReceipt)
+    public void DeleteFailedReceipt(Destination destination, Folder folder, FailedReceipt failedReceipt)
     {
         try
         {
@@ -296,7 +296,7 @@ public class DataStore
         }
     }
 
-    internal void DeleteReceivedDataOfFile(Folder folder, Guid fileId)
+    public void DeleteReceivedDataOfFile(Folder folder, Guid fileId)
     {
         try
         {
@@ -310,7 +310,7 @@ public class DataStore
         }
     }
 
-    internal void ClearLastPosition(Destination destination, Folder folder, Entities.File file)
+    public void ClearLastPosition(Destination destination, Folder folder, Entities.File file)
     {
         try
         {
@@ -322,6 +322,23 @@ public class DataStore
         catch (Exception ex)
         {
             _logger.FailedToClearLastPosition(file.RelativePath, destination.Name, ex);
+        }
+    }
+
+    public Stream CreateSignatureFile(Folder folder, Entities.File file)
+    {
+        try
+        {
+            _logger.CreateSignatureFile(file.RelativePath,file.Id);
+            var path = Path.Combine(folder.FullName, Constants.RootDirectoryName, "Data", "Signatures");
+            _fileSystem.CreateDirectory(path);
+            var signatureFile = Path.Combine(path, file.Id.ToString());
+            return _fileSystem.GetWriteFileStream(signatureFile);
+        }
+        catch (Exception ex)
+        {
+            _logger?.FailedToCreateSignatureFile(file.RelativePath, file.Id, ex);
+            return FileStream.Null;
         }
     }
 }

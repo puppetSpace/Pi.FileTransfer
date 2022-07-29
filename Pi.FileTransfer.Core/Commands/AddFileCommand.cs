@@ -28,14 +28,20 @@ public class AddFileCommand : IRequest<Unit>
         private readonly FileSegmentation _fileSegmentation;
         private readonly TransferService _transferService;
         private readonly DataStore _transferStore;
+        private readonly DeltaService _deltaService;
         private readonly ILogger<AddFileCommand> _logger;
         private readonly ConcurrentDictionary<string, int> _currentBytesRead = new ConcurrentDictionary<string, int>();
 
-        public AddFileCommandhandler(FileSegmentation fileSegmentation, TransferService transferService, DataStore transferStore, ILogger<AddFileCommand> logger)
+        public AddFileCommandhandler(FileSegmentation fileSegmentation
+            , TransferService transferService
+            , DataStore transferStore
+            , DeltaService deltaService
+            , ILogger<AddFileCommand> logger)
         {
             _fileSegmentation = fileSegmentation;
             _transferService = transferService;
             _transferStore = transferStore;
+            _deltaService = deltaService;
             _logger = logger;
         }
 
@@ -45,6 +51,7 @@ public class AddFileCommand : IRequest<Unit>
                 return Unit.Value;
 
             _logger.SegmentFile(notification.File.RelativePath);
+            _deltaService.CreateSignature(notification.Folder, notification.File);
             var totalAmountOfSegments = await _fileSegmentation.SegmentFile(notification.Folder, notification.File, SendSegment);
             await SendReceipt(notification.Folder, notification.File, totalAmountOfSegments);
 

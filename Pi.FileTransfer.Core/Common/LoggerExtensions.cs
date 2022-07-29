@@ -329,6 +329,18 @@ public static partial class LoggerExtensionsDataStore
     Level = LogLevel.Error,
     Message = "Failed to store last positition '{LastPosition}' of file '{File}' for destination '{Destination}'")]
     public static partial void FailedToStoreLastPosition(this ILogger logger, int lastPosition, string file, string destination, Exception exception);
+
+    [LoggerMessage(
+    EventId = 29,
+    Level = LogLevel.Debug,
+    Message = "Creating delta signature file for '{file}' with name '{fileId}'")]
+    public static partial void CreateSignatureFile(this ILogger logger, string file, Guid fileId);
+
+    [LoggerMessage(
+    EventId = 30,
+    Level = LogLevel.Error,
+    Message = "Failed to create delta signature file for '{file}' with name '{fileId}'")]
+    public static partial void FailedToCreateSignatureFile(this ILogger logger, string file, Guid fileId, Exception exception);
 }
 
 public static partial class LoggerExtensionsFileIndex

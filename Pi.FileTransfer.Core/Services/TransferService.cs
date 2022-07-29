@@ -13,6 +13,7 @@ using System.Threading.Tasks;
 namespace Pi.FileTransfer.Core.Services;
 public class TransferService
 {
+	public const string HttpClientName = "Transfer";
 	private readonly IHttpClientFactory _clientFactory;
 	private readonly ILogger<TransferService> _logger;
 
@@ -25,7 +26,7 @@ public class TransferService
 	public async Task Send(Destination destination, TransferSegment data)
 	{
 		_logger.SendSegment(data.Sequencenumber,data.FileId,data.FolderName,destination.Address);
-		var client = _clientFactory.CreateClient();
+		var client = _clientFactory.CreateClient(HttpClientName);
 		var response = await client.PostAsJsonAsync($"{destination.Address}/api/file/segment", data);
 		if (!response.IsSuccessStatusCode)
 		{
@@ -37,7 +38,7 @@ public class TransferService
     public async Task SendReceipt(Destination destination, TransferReceipt transferReceipt)
     {
         _logger.SendReceipt(transferReceipt.RelativePath,transferReceipt.FolderName,destination.Address);
-        var client = _clientFactory.CreateClient();
+		var client = _clientFactory.CreateClient(HttpClientName);
         var response = await client.PostAsJsonAsync($"{destination.Address}/api/file/receipt", transferReceipt);
         if (!response.IsSuccessStatusCode)
         {
