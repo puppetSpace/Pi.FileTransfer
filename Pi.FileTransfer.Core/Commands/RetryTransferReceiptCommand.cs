@@ -45,7 +45,7 @@ public class RetryTransferReceiptCommand : IRequest<Unit>
                 if (file is not null)
                 {
                     _logger.RetryTransferReceipt(request.FailedReceipt.FileId,request.Folder.Name,request.Destination.Name);
-                    await _transferService.SendReceipt(request.Destination, new TransferReceipt(request.FailedReceipt.FileId, file.RelativePath, request.FailedReceipt.TotalAmountOfSegments, request.Folder.Name));
+                    await _transferService.SendReceipt(request.Destination, new TransferReceipt(request.FailedReceipt.FileId, file.RelativePath, request.FailedReceipt.TotalAmountOfSegments, request.Folder.Name, request.FailedReceipt.IsFileUpdate));
                     _transferStore.DeleteFailedReceipt(request.Destination, request.Folder, request.FailedReceipt);
                 } 
 

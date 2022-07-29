@@ -2,12 +2,7 @@
 using Microsoft.Extensions.Logging;
 using Pi.FileTransfer.Core.Entities;
 using Pi.FileTransfer.Core.Services;
-using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Pi.FileTransfer.Core.Commands;
 //should actualy be a notification. but is is cleaner to have commands for everything
@@ -30,7 +25,7 @@ public class AddFileCommand : IRequest<Unit>
         private readonly DataStore _transferStore;
         private readonly DeltaService _deltaService;
         private readonly ILogger<AddFileCommand> _logger;
-        private readonly ConcurrentDictionary<string, int> _currentBytesRead = new ConcurrentDictionary<string, int>();
+        private readonly ConcurrentDictionary<string, int> _currentBytesRead = new();
 
         public AddFileCommandhandler(FileSegmentation fileSegmentation
             , TransferService transferService
@@ -48,9 +43,11 @@ public class AddFileCommand : IRequest<Unit>
         public async Task<Unit> Handle(AddFileCommand notification, CancellationToken cancellationToken)
         {
             if (!notification.Folder.Destinations.Any())
+            {
                 return Unit.Value;
+            }
 
-            _logger.SegmentFile(notification.File.RelativePath);
+            _logger.ProcessNewFile(notification.File.RelativePath);
             _deltaService.CreateSignature(notification.Folder, notification.File);
             var totalAmountOfSegments = await _fileSegmentation.SegmentFile(notification.Folder, notification.File, SendSegment);
             await SendReceipt(notification.Folder, notification.File, totalAmountOfSegments);
@@ -73,7 +70,7 @@ public class AddFileCommand : IRequest<Unit>
         private void ClearLastPosition(Folder folder, Entities.File file)
         {
             _logger.ClearLastPosition(file.RelativePath);
-            foreach(var destination in folder.Destinations)
+            foreach (var destination in folder.Destinations)
             {
                 _transferStore.ClearLastPosition(destination, folder, file);
             }
@@ -81,15 +78,15 @@ public class AddFileCommand : IRequest<Unit>
 
         private async Task SendToDestination(int sequenceNumber, byte[] buffer, Folder folder, Entities.File file, Destination destination)
         {
-            var readBytes = _currentBytesRead.TryGetValue(destination.Name, out int currentBytesRead) ? currentBytesRead + buffer.Length : buffer.Length;
+            var readBytes = _currentBytesRead.TryGetValue(destination.Name, out var currentBytesRead) ? currentBytesRead + buffer.Length : buffer.Length;
             try
             {
-                _logger.SendSegment(file.RelativePath,destination.Name);
+                _logger.SendSegment(file.RelativePath, destination.Name);
                 await _transferService.Send(destination, new(sequenceNumber, buffer, file.Id, folder.Name));
             }
             catch (Exception ex)
             {
-                _logger.SendSegmentFailed(file.RelativePath,destination.Name, ex);
+                _logger.SendSegmentFailed(file.RelativePath, destination.Name, ex);
                 var start = readBytes > 0 ? readBytes - buffer.Length : 0;
                 var end = readBytes;
                 await _transferStore.StoreFailedSegmentTransfer(destination, folder, file, sequenceNumber, new SegmentRange(start, end));
@@ -109,13 +106,13 @@ public class AddFileCommand : IRequest<Unit>
             {
                 try
                 {
-                    _logger.SendReceipt(file.RelativePath,destination.Name);
-                    await _transferService.SendReceipt(destination, new(file.Id, file.RelativePath, totalAmountOfSegments, folder.Name));
+                    _logger.SendReceipt(file.RelativePath, destination.Name);
+                    await _transferService.SendReceipt(destination, new(file.Id, file.RelativePath, totalAmountOfSegments, folder.Name, true));
                 }
                 catch (Exception ex)
                 {
-                    _logger.SendReceiptFailed(file.RelativePath,destination.Name, ex);
-                    await _transferStore.StoreFailedReceiptTransfer(destination, folder, file, totalAmountOfSegments);
+                    _logger.SendReceiptFailed(file.RelativePath, destination.Name, ex);
+                    await _transferStore.StoreFailedReceiptTransfer(destination, folder, file, totalAmountOfSegments, true);
                 }
             }
         }

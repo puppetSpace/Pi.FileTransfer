@@ -58,8 +58,8 @@ public static partial class LoggerExtensionsAddFileCommand
     [LoggerMessage(
     EventId = 0,
     Level = LogLevel.Information,
-    Message = "Segmenting file {File}")]
-    public static partial void SegmentFile(this ILogger logger, string file);
+    Message = "Processing new file {File}")]
+    public static partial void ProcessNewFile(this ILogger logger, string file);
 
     [LoggerMessage(
     EventId = 1,
@@ -341,6 +341,18 @@ public static partial class LoggerExtensionsDataStore
     Level = LogLevel.Error,
     Message = "Failed to create delta signature file for '{file}' with name '{fileId}'")]
     public static partial void FailedToCreateSignatureFile(this ILogger logger, string file, Guid fileId, Exception exception);
+
+    [LoggerMessage(
+    EventId = 31,
+    Level = LogLevel.Debug,
+    Message = "Get delta signature content for '{file}' with name '{fileId}'")]
+    public static partial void GetSignatureFileContent(this ILogger logger, string file, Guid fileId);
+
+    [LoggerMessage(
+    EventId = 32,
+    Level = LogLevel.Error,
+    Message = "Failed to get delta signature content for '{file}' with name '{fileId}'")]
+    public static partial void FailedToGetGetSignatureFileContent(this ILogger logger, string file, Guid fileId, Exception exception);
 }
 
 public static partial class LoggerExtensionsFileIndex
@@ -419,4 +431,13 @@ public static partial class LoggerExtensionsFileSegmentation
 
 
 
+}
+
+public static partial class LoggerExtensionsDeltaService
+{
+    [LoggerMessage(
+        EventId = 0, 
+        Level = LogLevel.Debug, 
+        Message = "operation: {operation}, currentPosition: {currentPosition}, total: {total}")]
+    public static partial void ReportDeltaProgress(this ILogger logger, string operation, long currentPosition, long total);
 }

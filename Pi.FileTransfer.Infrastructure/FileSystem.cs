@@ -66,6 +66,14 @@ public class FileSystem : IFileSystem
         return (await JsonSerializer.DeserializeAsync<TE>(fs))!;
     }
 
+    public async Task<byte[]> GetRawContentOfFile(string file)
+    {
+        using var fs = File.Open(file, FileMode.Open, FileAccess.Read, FileShare.Read);
+        using var sr = new MemoryStream();
+        await fs.CopyToAsync(sr);
+        return sr.ToArray();
+    }
+
     public void DeleteFile(string file)
     {
         if (File.Exists(file))

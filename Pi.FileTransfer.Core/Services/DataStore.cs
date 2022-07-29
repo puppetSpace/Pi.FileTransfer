@@ -81,7 +81,7 @@ public class DataStore
         }
     }
 
-    public async Task StoreFailedReceiptTransfer(Destination destination, Entities.Folder folder, Entities.File file, int totalAmountOfSegments)
+    public async Task StoreFailedReceiptTransfer(Destination destination, Entities.Folder folder, Entities.File file, int totalAmountOfSegments, bool isFileUpdate)
     {
         try
         {
@@ -90,7 +90,7 @@ public class DataStore
             _fileSystem.CreateDirectory(path);
 
             var transferFile = Path.Combine(path, $"{file.Id}.failedreceipt");
-            await _fileSystem.WritetoFile(transferFile, new FailedReceipt(file.Id, totalAmountOfSegments));
+            await _fileSystem.WritetoFile(transferFile, new FailedReceipt(file.Id, totalAmountOfSegments,isFileUpdate));
         }
         catch (Exception ex)
         {
@@ -339,6 +339,28 @@ public class DataStore
         {
             _logger?.FailedToCreateSignatureFile(file.RelativePath, file.Id, ex);
             return FileStream.Null;
+        }
+    }
+
+    public async Task<byte[]> GetSignatureFileContent(Folder folder, Entities.File file)
+    {
+        try
+        {
+            _logger.GetSignatureFileContent(file.RelativePath, file.Id);
+            var path = Path.Combine(folder.FullName, Constants.RootDirectoryName, "Data", "Signatures", file.Id.ToString());
+            if (System.IO.File.Exists(path))
+            {
+                return await _fileSystem.GetRawContentOfFile(path);
+            }
+            else
+            {
+                return Array.Empty<byte>();
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger?.FailedToGetGetSignatureFileContent(file.RelativePath, file.Id, ex);
+            return Array.Empty<byte>();
         }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using MediatR;
+using Pi.FileTransfer.Core.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -19,6 +20,16 @@ public class UpdateFileCommand : IRequest<Unit>
 
     public class UpdateFileCommandHandler : IRequestHandler<UpdateFileCommand>
     {
-        public Task<Unit> Handle(UpdateFileCommand request, CancellationToken cancellationToken) => throw new NotImplementedException();
+        private readonly DeltaService _deltaService;
+
+        public UpdateFileCommandHandler(DeltaService deltaService)
+        {
+            _deltaService = deltaService;
+        }
+
+        public Task<Unit> Handle(UpdateFileCommand request, CancellationToken cancellationToken)
+        {
+
+        }
     }
 }

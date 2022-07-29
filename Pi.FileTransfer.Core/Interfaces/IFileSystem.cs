@@ -12,4 +12,5 @@ public interface IFileSystem
     FileStream GetWriteFileStream(string file, int bufferSize = 2048);
     void MoveFile(string source, string destination);
     void DeleteDirectory(string incomingDataFolder);
+    Task<byte[]> GetRawContentOfFile(string file);
 }
