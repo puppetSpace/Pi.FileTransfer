@@ -8,6 +8,7 @@ namespace Pi.FileTransfer.Infrastructure;
 public class FileSystem : IFileSystem
 {
     private readonly IOptions<AppSettings> _options;
+    private static SemaphoreSlim _semaphore = new SemaphoreSlim(1);
 
     public FileSystem(IOptions<AppSettings> options)
     {
@@ -48,12 +49,21 @@ public class FileSystem : IFileSystem
     public void CreateDirectory(string path)=> Directory.CreateDirectory(path);
     public async Task WritetoFile<TE>(string transferFile, TE value)
     {
-        await File.WriteAllTextAsync(transferFile, JsonSerializer.Serialize(value));
+        await _semaphore.WaitAsync();
+        try
+        {
+            await File.WriteAllTextAsync(transferFile, JsonSerializer.Serialize(value));
+        }
+        finally
+        {
+            _semaphore.Release();
+        }
     }
 
     public async Task<TE> GetContentOfFile<TE>(string file)
     {
-        return JsonSerializer.Deserialize<TE>(await File.ReadAllTextAsync(file));
+        using var fs = File.Open(file,FileMode.Open,FileAccess.Read,FileShare.Read);
+        return (await JsonSerializer.DeserializeAsync<TE>(fs))!;
     }
 
     public void DeleteFile(string file)
