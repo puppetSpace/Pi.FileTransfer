@@ -31,17 +31,16 @@ public class DeltaService
         writeStream.Flush();
     }
 
-    public async Task<byte[]> CreateDelta(Entities.Folder folder, Entities.File file)
+    public async Task CreateDelta(Entities.Folder folder, Entities.File file)
     {
         using var fs = _fileSystem.GetReadFileStream(file.GetFullPath(folder));
-        using var deltaStream = new System.IO.MemoryStream();
+        using var deltaStream = _dataStore.CreateDeltaFile(folder, file);
         using var signatureStream = new System.IO.MemoryStream(await _dataStore.GetSignatureFileContent(folder, file));
         var signatureReader = new Octodiff.Core.SignatureReader(signatureStream, new LogProgressReporter(_logger));
         var deltaWriter = new Octodiff.Core.AggregateCopyOperationsDecorator(new Octodiff.Core.BinaryDeltaWriter(deltaStream));
         var deltaBuilder = new Octodiff.Core.DeltaBuilder();
         deltaBuilder.BuildDelta(fs, signatureReader, deltaWriter);
-
-        return deltaStream.ToArray();
+        deltaStream.Flush();
     }
 
     private class LogProgressReporter : Octodiff.Diagnostics.IProgressReporter

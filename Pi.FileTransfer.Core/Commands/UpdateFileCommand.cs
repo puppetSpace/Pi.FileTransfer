@@ -27,9 +27,13 @@ public class UpdateFileCommand : IRequest<Unit>
             _deltaService = deltaService;
         }
 
-        public Task<Unit> Handle(UpdateFileCommand request, CancellationToken cancellationToken)
+        public async Task<Unit> Handle(UpdateFileCommand request, CancellationToken cancellationToken)
         {
+            if (!request.Folder.Destinations.Any())
+                return Unit.Value;
 
+
+            await _deltaService.CreateDelta(request.Folder, request.File);
         }
     }
 }

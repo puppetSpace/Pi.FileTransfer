@@ -342,6 +342,23 @@ public class DataStore
         }
     }
 
+    public Stream CreateDeltaFile(Folder folder, Entities.File file)
+    {
+        try
+        {
+            _logger.CreateSignatureFile(file.RelativePath, file.Id);
+            var path = Path.Combine(folder.FullName, Constants.RootDirectoryName, "Data", "Deltas");
+            _fileSystem.CreateDirectory(path);
+            var signatureFile = Path.Combine(path, file.Id.ToString());
+            return _fileSystem.GetWriteFileStream(signatureFile);
+        }
+        catch (Exception ex)
+        {
+            _logger?.FailedToCreateSignatureFile(file.RelativePath, file.Id, ex);
+            return FileStream.Null;
+        }
+    }
+
     public async Task<byte[]> GetSignatureFileContent(Folder folder, Entities.File file)
     {
         try
