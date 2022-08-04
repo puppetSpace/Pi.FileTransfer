@@ -22,6 +22,7 @@ public static class DependencyInjection
         services.AddMediatR(Assembly.GetExecutingAssembly());
         services.AddTransient<FileIndexer>();
         services.AddTransient<FileSegmentation>();
+        services.AddTransient<DeltaSegmentation>();
         services.AddTransient<TransferService>();
         services.AddTransient<DataStore>();
         services.AddTransient<DeltaService>();

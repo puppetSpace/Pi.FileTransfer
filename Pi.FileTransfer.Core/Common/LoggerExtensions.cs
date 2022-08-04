@@ -149,6 +149,12 @@ public static partial class LoggerExtensionsRetryTransferSegmentCommand
     public static partial void RetryTransferSegment(this ILogger logger, int sequencenumber, Guid fileId, string folder, string destination);
 
     [LoggerMessage(
+    EventId = 3,
+    Level = LogLevel.Information,
+    Message = "Retry sending segment {Sequencenumber} of delta from file with id '{FileId}' from folder '{Folder}' for destination '{Destination}'")]
+    public static partial void RetryDeltaTransferSegment(this ILogger logger, int sequencenumber, Guid fileId, string folder, string destination);
+
+    [LoggerMessage(
     EventId = 1,
     Level = LogLevel.Error,
     Message = "Failed to retry sending segment {Sequencenumber} of file with id '{FileId}' from folder '{Folder}' for destination '{Destination}'")]
@@ -440,4 +446,13 @@ public static partial class LoggerExtensionsDeltaService
         Level = LogLevel.Debug, 
         Message = "operation: {operation}, currentPosition: {currentPosition}, total: {total}")]
     public static partial void ReportDeltaProgress(this ILogger logger, string operation, long currentPosition, long total);
+}
+
+public static partial class LoggerExtensionsUpdateFileCommand
+{
+    [LoggerMessage(
+        EventId = 0,
+        Level = LogLevel.Information,
+        Message = "Processing updated file {File}")]
+    public static partial void ProcessUpdatedFile(this ILogger logger, string file);
 }

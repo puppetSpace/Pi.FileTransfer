@@ -64,7 +64,7 @@ public class DataStore
         }
     }
 
-    public async Task StoreFailedSegmentTransfer(Destination destination, Entities.Folder folder, Entities.File file, int sequencenumber, SegmentRange range)
+    public async Task StoreFailedSegmentTransfer(Destination destination, Entities.Folder folder, Entities.File file, int sequencenumber, SegmentRange range, bool isFileUpdate)
     {
         try
         {
@@ -73,7 +73,7 @@ public class DataStore
             _fileSystem.CreateDirectory(path);
 
             var transferFile = Path.Combine(path, $"{sequencenumber}_{file.Id}.failedsegment");
-            await _fileSystem.WritetoFile(transferFile, new FailedSegment(file.Id, sequencenumber, range));
+            await _fileSystem.WritetoFile(transferFile, new FailedSegment(file.Id, sequencenumber, range, isFileUpdate));
         }
         catch (Exception ex)
         {
@@ -325,7 +325,7 @@ public class DataStore
         }
     }
 
-    public Stream CreateSignatureFile(Folder folder, Entities.File file)
+    public string GetSignatureFilePath(Folder folder, Entities.File file)
     {
         try
         {
@@ -333,29 +333,29 @@ public class DataStore
             var path = Path.Combine(folder.FullName, Constants.RootDirectoryName, "Data", "Signatures");
             _fileSystem.CreateDirectory(path);
             var signatureFile = Path.Combine(path, file.Id.ToString());
-            return _fileSystem.GetWriteFileStream(signatureFile);
+            return signatureFile;
         }
         catch (Exception ex)
         {
             _logger?.FailedToCreateSignatureFile(file.RelativePath, file.Id, ex);
-            return FileStream.Null;
+            return String.Empty;
         }
     }
 
-    public Stream CreateDeltaFile(Folder folder, Entities.File file)
+    public string GetDeltaFilePath(Folder folder, Entities.File file)
     {
         try
         {
             _logger.CreateSignatureFile(file.RelativePath, file.Id);
             var path = Path.Combine(folder.FullName, Constants.RootDirectoryName, "Data", "Deltas");
             _fileSystem.CreateDirectory(path);
-            var signatureFile = Path.Combine(path, file.Id.ToString());
-            return _fileSystem.GetWriteFileStream(signatureFile);
+            var deltaFile = Path.Combine(path, file.Id.ToString());
+            return deltaFile;
         }
         catch (Exception ex)
         {
             _logger?.FailedToCreateSignatureFile(file.RelativePath, file.Id, ex);
-            return FileStream.Null;
+            return String.Empty;
         }
     }
 

@@ -25,7 +25,7 @@ public class DeltaService
     {
         using var fs = _fileSystem.GetReadFileStream(file.GetFullPath(folder));
         var signatureBuilder = new Octodiff.Core.SignatureBuilder();
-        using var writeStream = _dataStore.CreateSignatureFile(folder, file);
+        using var writeStream = _fileSystem.GetWriteFileStream(_dataStore.GetSignatureFilePath(folder, file));
         var signatureWriter = new Octodiff.Core.SignatureWriter(writeStream);
         signatureBuilder.Build(fs, signatureWriter);
         writeStream.Flush();
@@ -34,7 +34,7 @@ public class DeltaService
     public async Task CreateDelta(Entities.Folder folder, Entities.File file)
     {
         using var fs = _fileSystem.GetReadFileStream(file.GetFullPath(folder));
-        using var deltaStream = _dataStore.CreateDeltaFile(folder, file);
+        using var deltaStream = _fileSystem.GetWriteFileStream(_dataStore.GetDeltaFilePath(folder, file));
         using var signatureStream = new System.IO.MemoryStream(await _dataStore.GetSignatureFileContent(folder, file));
         var signatureReader = new Octodiff.Core.SignatureReader(signatureStream, new LogProgressReporter(_logger));
         var deltaWriter = new Octodiff.Core.AggregateCopyOperationsDecorator(new Octodiff.Core.BinaryDeltaWriter(deltaStream));

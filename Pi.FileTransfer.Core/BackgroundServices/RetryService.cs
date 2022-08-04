@@ -44,7 +44,13 @@ public class RetryService : BackgroundService
         _logger.RetrySendingSegments(folder.Name,destination.Name);
         await foreach (var failure in _transferStore.GetFailedSegments(folder, destination))
         {
-            _ = await _mediator.Send(new RetryTransferSegmentCommand(failure, destination, folder));
+            IRequest<Unit> request;
+            if (failure.IsFileUpdate)
+                request = new RetryTransferDeltaSegmentCommand(failure, destination, folder);
+            else
+                request = new RetryTransferFileSegmentCommand(failure, destination, folder);
+
+            _ = await _mediator.Send(request);
         }
     }
 
