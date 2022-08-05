@@ -45,7 +45,7 @@ public class DeltaService
         deltaStream.Flush();
     }
 
-    public void ApplyDelta(string deltaFilePath, Entities.Folder folder, string destination)
+    public DateTime ApplyDelta(string deltaFilePath, Entities.Folder folder, string destination)
     {
         var tempPath = _dataStore.GetIncomingTempFilePath(folder, $"delta_{Guid.NewGuid()}");
         _logger.ApplyDelta(tempPath,destination);
@@ -72,6 +72,8 @@ public class DeltaService
         {
             _logger.FailedToDeleteTempDeltaFile(tempPath,ex);
         }
+
+        return File.GetLastWriteTimeUtc(destination);
     }
 
     private class LogProgressReporter : Octodiff.Diagnostics.IProgressReporter
