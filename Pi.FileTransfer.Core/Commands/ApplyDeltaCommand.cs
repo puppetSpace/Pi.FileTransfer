@@ -10,10 +10,10 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace Pi.FileTransfer.Core.Commands;
-public class AssembleFileCommand : IRequest<Unit>
+public class ApplyDeltaCommand : IRequest<Unit>
 {
 
-    public AssembleFileCommand(Folder folder,TransferReceipt transferReceipt, IEnumerable<TransferSegment> transferSegments)
+    public ApplyDeltaCommand(Folder folder,TransferReceipt transferReceipt, IEnumerable<TransferSegment> transferSegments)
     {
         TransferReceipt = transferReceipt;
         Folder = folder;
@@ -24,29 +24,34 @@ public class AssembleFileCommand : IRequest<Unit>
     public Folder Folder { get; }
     public IEnumerable<TransferSegment> TransferSegments { get; }
 
-    public class AssembleFileCommandHandler : AssembleCommandHandlerBase, IRequestHandler<AssembleFileCommand>
+    public class ApplyDeltaCommandHandler : AssembleCommandHandlerBase, IRequestHandler<ApplyDeltaCommand>
     {
-        private readonly DataStore _transferStore;
-        private readonly IFileSystem _fileSystem;
+        private readonly DataStore _dataStore;
+        private readonly DeltaService _deltaService;
         private readonly IFolderRepository _folderRepository;
 
-        public AssembleFileCommandHandler(FileSegmentation fileSegmentation, DataStore transferStore
-            , IFileSystem fileSystem, IFolderRepository folderRepository
-            , ILogger<AssembleFileCommand> logger)
-            :base(fileSegmentation,logger)
+        public ApplyDeltaCommandHandler(DeltaSegmentation deltaSegmentation, DataStore dataStore, DeltaService deltaService
+            , IFolderRepository folderRepository, ILogger<AssembleFileCommand> logger)
+            :base(deltaSegmentation,logger)
         {
-            _transferStore = transferStore;
-            _fileSystem = fileSystem;
+            _dataStore = dataStore;
+            _deltaService = deltaService;
             _folderRepository = folderRepository;
         }
 
-        public async Task<Unit> Handle(AssembleFileCommand request, CancellationToken cancellationToken)
+        public async Task<Unit> Handle(ApplyDeltaCommand request, CancellationToken cancellationToken)
         {
             try
             {
                 var tempFile = await base.BuildFile(request.Folder, request.TransferReceipt, request.TransferSegments);
                 var destination = Path.Combine(request.Folder.FullName, request.TransferReceipt.RelativePath);
-                _fileSystem.MoveFile(tempFile, destination);
+                if (!System.IO.File.Exists(destination))
+                {
+                    Logger.FileDoesNotExistForApplyingDelta(destination);
+                    return Unit.Value;
+                }
+
+                _deltaService.ApplyDelta(tempFile, request.Folder, destination);
 
                 var file = new Entities.File
                 {
@@ -54,15 +59,15 @@ public class AssembleFileCommand : IRequest<Unit>
                     Extension = Path.GetExtension(request.TransferReceipt.RelativePath),
                     RelativePath = request.TransferReceipt.RelativePath,
                     Name = Path.GetFileName(request.TransferReceipt.RelativePath),
-                    LastModified = new FileInfo(destination).LastWriteTimeUtc
+                    LastModified = DateTime.UtcNow,
                 };
                 request.Folder.AddFile(file);
                 await _folderRepository.Save(request.Folder);
-                _transferStore.DeleteReceivedDataOfFile(request.Folder, request.TransferReceipt.FileId);
+                _dataStore.DeleteReceivedDataOfFile(request.Folder, request.TransferReceipt.FileId);
             }
             catch (Exception ex)
             {
-                Logger.BuildingFileFailed(request.TransferReceipt.RelativePath, ex);
+                Logger.ApplyingDeltaFailed(request.TransferReceipt.RelativePath, ex);
             }
 
 

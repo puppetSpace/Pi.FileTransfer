@@ -9,9 +9,9 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace Pi.FileTransfer.Core.Commands;
-public abstract class RetryTransferSegmentCommandHandler
+public abstract class RetryTransferSegmentCommandHandlerBase
 {
-    public RetryTransferSegmentCommandHandler(Segmentation segmentation, TransferService transferService, DataStore dataStore, ILogger logger)
+    public RetryTransferSegmentCommandHandlerBase(Segmentation segmentation, TransferService transferService, DataStore dataStore, ILogger logger)
     {
         Segmentation = segmentation;
         TransferService = transferService;

@@ -15,7 +15,7 @@ public class FileSegmentation : Segmentation
 {
     private readonly IFileSystem _fileSystem;
 
-    public FileSegmentation(IFileSystem fileSystem, ILogger<FileSegmentation> logger) : base(fileSystem,logger)
+    public FileSegmentation(IFileSystem fileSystem, DataStore dataStore, ILogger<FileSegmentation> logger) : base(fileSystem,dataStore,logger)
     {
         _fileSystem = fileSystem;
     }

@@ -105,6 +105,18 @@ public static partial class LoggerExtensionsAssembleFileCommand
     Level = LogLevel.Error,
     Message = "Building file {File} failed.")]
     public static partial void BuildingFileFailed(this ILogger logger, string file, Exception exception);
+
+    [LoggerMessage(
+    EventId = 2,
+    Level = LogLevel.Error,
+    Message = "Applying delta to file {File} failed.")]
+    public static partial void ApplyingDeltaFailed(this ILogger logger, string file, Exception exception);
+
+    [LoggerMessage(
+    EventId = 3,
+    Level = LogLevel.Warning,
+    Message = "File {File} does not exists. Unable to apply delta.")]
+    public static partial void FileDoesNotExistForApplyingDelta(this ILogger logger, string file);
 }
 
 public static partial class LoggerExtensionsIndexFileCommand
@@ -455,4 +467,100 @@ public static partial class LoggerExtensionsUpdateFileCommand
         Level = LogLevel.Information,
         Message = "Processing updated file {File}")]
     public static partial void ProcessUpdatedFile(this ILogger logger, string file);
+}
+
+public static partial class LoggerExtensionsDeltaService
+{
+    [LoggerMessage(
+       EventId = 0,
+       Level = LogLevel.Debug,
+       Message = "Creating delta signature for file {File}")]
+    public static partial void CreateSignature(this ILogger logger,string file);
+
+    [LoggerMessage(
+       EventId = 1,
+       Level = LogLevel.Debug,
+       Message = "Creating delta for file {File}")]
+    public static partial void CreateDelta(this ILogger logger, string file);
+
+    [LoggerMessage(
+       EventId = 2,
+       Level = LogLevel.Debug,
+       Message = "Applying delta '{source}' to file {File}")]
+    public static partial void ApplyDelta(this ILogger logger,string source, string file);
+
+    [LoggerMessage(
+    EventId = 3,
+    Level = LogLevel.Warning,
+    Message = "Failed to delete temp delta file {File}")]
+    public static partial void FailedToDeleteTempDeltaFile(this ILogger logger, string file,Exception exception);
+}
+
+public static partial class LoggerExtensionsFileSystem
+{
+    [LoggerMessage(
+       EventId = 0,
+       Level = LogLevel.Debug,
+       Message = "Getting {noOfFiles} files for folder '{folder}'")]
+    public static partial void GetFilesForFolder(this ILogger logger, int noOfFiles ,string folder);
+
+    [LoggerMessage(
+       EventId = 1,
+       Level = LogLevel.Debug,
+       Message = "Getting {noOfFolders} folders for folder '{folder}'")]
+    public static partial void GetFoldersFromBasePath(this ILogger logger, int noOfFolders, string folder);
+
+    [LoggerMessage(
+       EventId = 2,
+       Level = LogLevel.Debug,
+       Message = "Opening readonly filestream for '{file}' with buffersize {bufferSize}")]
+    public static partial void OpeningReadOnlyStream(this ILogger logger, string file, int bufferSize);
+
+    [LoggerMessage(
+   EventId = 3,
+   Level = LogLevel.Debug,
+   Message = "Opening writeonly filestream for '{file}' with buffersize {bufferSize}")]
+    public static partial void OpeningWriteOnlyStream(this ILogger logger, string file, int bufferSize);
+
+    [LoggerMessage(
+        EventId = 4,
+        Level = LogLevel.Debug,
+        Message = "Creating folder {folder}")]
+    public static partial void CreateFolder(this ILogger logger, string folder);
+
+    [LoggerMessage(
+        EventId = 5,
+        Level = LogLevel.Debug,
+        Message = "Write to {file} with content type of {type}")]
+    public static partial void WriteToFile(this ILogger logger, string file,string? type);
+
+    [LoggerMessage(
+    EventId = 6,
+    Level = LogLevel.Debug,
+    Message = "Read content from file {file} with content type of {type}")]
+    public static partial void ReadFromFile(this ILogger logger, string file, string? type);
+
+    [LoggerMessage(
+        EventId = 7,
+        Level = LogLevel.Debug,
+        Message = "Delete file {file}")]
+    public static partial void DeleteFile(this ILogger logger, string file);
+
+    [LoggerMessage(
+    EventId = 8,
+    Level = LogLevel.Debug,
+    Message = "Copy file {source} to {destination}")]
+    public static partial void CopyFile(this ILogger logger, string source, string destination);
+
+    [LoggerMessage(
+        EventId = 9,
+        Level = LogLevel.Debug,
+        Message = "Move file {source} to {destination}")]
+    public static partial void MoveFile(this ILogger logger, string source, string destination);
+
+    [LoggerMessage(
+    EventId = 10,
+    Level = LogLevel.Debug,
+    Message = "Delete folder {folder}")]
+    public static partial void DeleteFolder(this ILogger logger, string folder);
 }

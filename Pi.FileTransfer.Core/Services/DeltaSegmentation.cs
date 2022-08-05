@@ -13,7 +13,7 @@ public class DeltaSegmentation : Segmentation
     private readonly IFileSystem _fileSystem;
     private readonly DataStore _dataStore;
 
-    public DeltaSegmentation(IFileSystem fileSystem, DataStore dataStore, ILogger<FileSegmentation> logger) : base(fileSystem, logger)
+    public DeltaSegmentation(IFileSystem fileSystem, DataStore dataStore, ILogger<FileSegmentation> logger) : base(fileSystem, dataStore, logger)
     {
         _fileSystem = fileSystem;
         _dataStore = dataStore;

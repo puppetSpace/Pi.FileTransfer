@@ -13,4 +13,5 @@ public interface IFileSystem
     void MoveFile(string source, string destination);
     void DeleteDirectory(string incomingDataFolder);
     Task<byte[]> GetRawContentOfFile(string file);
+    void CopyFile(string source, string destination);
 }

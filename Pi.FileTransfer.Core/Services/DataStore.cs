@@ -380,4 +380,11 @@ public class DataStore
             return Array.Empty<byte>();
         }
     }
+
+    public string GetIncomingTempFilePath(Folder folder, string fileName)
+    {
+        var tempPath = Path.Combine(folder.FullName, Constants.RootDirectoryName, "Data", "Incoming", "Temp");
+        _fileSystem.CreateDirectory(tempPath);
+        return Path.Combine(tempPath, fileName);
+    }
 }

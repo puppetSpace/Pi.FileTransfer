@@ -23,6 +23,7 @@ public class DeltaService
 
     public void CreateSignature(Entities.Folder folder, Entities.File file)
     {
+        _logger.CreateSignature(file.RelativePath);
         using var fs = _fileSystem.GetReadFileStream(file.GetFullPath(folder));
         var signatureBuilder = new Octodiff.Core.SignatureBuilder();
         using var writeStream = _fileSystem.GetWriteFileStream(_dataStore.GetSignatureFilePath(folder, file));
@@ -33,6 +34,7 @@ public class DeltaService
 
     public async Task CreateDelta(Entities.Folder folder, Entities.File file)
     {
+        _logger.CreateDelta(file.RelativePath);
         using var fs = _fileSystem.GetReadFileStream(file.GetFullPath(folder));
         using var deltaStream = _fileSystem.GetWriteFileStream(_dataStore.GetDeltaFilePath(folder, file));
         using var signatureStream = new System.IO.MemoryStream(await _dataStore.GetSignatureFileContent(folder, file));
@@ -41,6 +43,35 @@ public class DeltaService
         var deltaBuilder = new Octodiff.Core.DeltaBuilder();
         deltaBuilder.BuildDelta(fs, signatureReader, deltaWriter);
         deltaStream.Flush();
+    }
+
+    public void ApplyDelta(string deltaFilePath, Entities.Folder folder, string destination)
+    {
+        var tempPath = _dataStore.GetIncomingTempFilePath(folder, $"delta_{Guid.NewGuid()}");
+        _logger.ApplyDelta(tempPath,destination);
+        using (var fs = _fileSystem.GetReadFileStream(destination))
+        {
+            using (var fsout = _fileSystem.GetWriteFileStream(tempPath))
+            {
+                using (var deltaStream = _fileSystem.GetReadFileStream(deltaFilePath))
+                {
+                    var deltaReader = new Octodiff.Core.BinaryDeltaReader(deltaStream, new LogProgressReporter(_logger));
+                    var deltaApplier = new Octodiff.Core.DeltaApplier { SkipHashCheck = true };
+                    deltaApplier.Apply(fs, deltaReader, fsout);
+                }
+            }
+        }
+
+        _fileSystem.CopyFile(tempPath, destination);
+
+        try
+        {
+            _fileSystem.DeleteFile(tempPath);
+        }
+        catch (Exception ex)
+        {
+            _logger.FailedToDeleteTempDeltaFile(tempPath,ex);
+        }
     }
 
     private class LogProgressReporter : Octodiff.Diagnostics.IProgressReporter
@@ -54,7 +85,7 @@ public class DeltaService
 
         public void ReportProgress(string operation, long currentPosition, long total)
         {
-            _logger.ReportDeltaProgress(operation,currentPosition,total);
+            _logger.ReportDeltaProgress(operation, currentPosition, total);
         }
     }
 

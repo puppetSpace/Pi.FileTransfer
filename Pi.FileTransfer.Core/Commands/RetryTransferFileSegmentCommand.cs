@@ -25,7 +25,7 @@ public class RetryTransferFileSegmentCommand : IRequest<MediatR.Unit>
     public Folder Folder { get; }
 
 
-    public class RetryTransferFileSegmentCommandHandler : RetryTransferSegmentCommandHandler, IRequestHandler<RetryTransferFileSegmentCommand>
+    public class RetryTransferFileSegmentCommandHandler : RetryTransferSegmentCommandHandlerBase, IRequestHandler<RetryTransferFileSegmentCommand>
     {
 
         public RetryTransferFileSegmentCommandHandler(FileSegmentation fileSegmentation, TransferService transferService

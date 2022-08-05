@@ -25,7 +25,7 @@ public class RetryTransferDeltaSegmentCommand : IRequest<MediatR.Unit>
     public Folder Folder { get; }
 
 
-    public class RetryTransferDeltaSegmentCommandHandler : RetryTransferSegmentCommandHandler, IRequestHandler<RetryTransferDeltaSegmentCommand>
+    public class RetryTransferDeltaSegmentCommandHandler : RetryTransferSegmentCommandHandlerBase, IRequestHandler<RetryTransferDeltaSegmentCommand>
     {
         public RetryTransferDeltaSegmentCommandHandler(DeltaSegmentation deltaSegmentation, TransferService transferService
             , DataStore transferStore, ILogger<RetryTransferFileSegmentCommand> logger)
