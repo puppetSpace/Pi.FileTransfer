@@ -14,12 +14,14 @@ var app = builder.Build();
 // Configure the HTTP request pipeline.
 app.UseHttpsRedirection();
 
-app.MapPost("api/file/segment", async (TransferSegment data, DataStore fsStore) =>
+var apiEndpoint = app.MapGroup("api");
+
+apiEndpoint.MapPost("/file/segment", async (TransferSegment data, DataStore fsStore) =>
 {
     await fsStore.StoreReceivedSegment(data);
 });
 
-app.MapPost("api/file/receipt", async (TransferReceipt data, DataStore fsStore) =>
+apiEndpoint.MapPost("/file/receipt", async (TransferReceipt data, DataStore fsStore) =>
 {
     await fsStore.StoreReceivedReceipt(data);
 });
@@ -29,9 +31,13 @@ managementEndPoint.MapGet("/folders", async (IMediator mediator) =>
 {
     return await mediator.Send(new GetFoldersQuery());
 });
-managementEndPoint.MapGet("/folders/{name}/transferdetails", async (IMediator mediator, string name) =>
+managementEndPoint.MapGet("/folders/{name}/outgoing/details", async (IMediator mediator, string name) =>
 {
-    return await mediator.Send(new GetTransferDetailQuery(name));
+    return await mediator.Send(new GetOutgoingTransferDetailQuery(name));
+});
+managementEndPoint.MapGet("/folders/{name}/incoming/transferdetails", async (IMediator mediator, string name) =>
+{
+    return await mediator.Send(new GetIncomingTransferDetailQuery(name));
 });
 
 app.Run();

@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Pi.FileTransfer.Core.Common;
 using Pi.FileTransfer.Core.Entities;
 using Pi.FileTransfer.Core.Interfaces;
@@ -15,11 +16,13 @@ public abstract class Segmentation
     private readonly IFileSystem _fileSystem;
     private readonly DataStore _dataStore;
     private readonly ILogger _logger;
+    private int _sizeOfSegment;
 
-	public Segmentation(IFileSystem fileSystem, DataStore dataStore,ILogger logger)
+	public Segmentation(IFileSystem fileSystem, DataStore dataStore, IOptions<AppSettings> options,ILogger logger)
 	{
         _fileSystem = fileSystem;
         _dataStore = dataStore;
+        _sizeOfSegment = options.Value.SizeOfSegmentInBytes;
         _logger = logger;
 	}
 
@@ -27,7 +30,7 @@ public abstract class Segmentation
     public async Task<int> Segment(Entities.Folder folder, Entities.File file, Func<int, byte[], Entities.Folder, Entities.File, Task> segmentCreatedFunc)
     {
         using var fs = GetStream(folder,file);
-        var buffer = ArrayPool<byte>.Shared.Rent(2048);
+        var buffer = ArrayPool<byte>.Shared.Rent(_sizeOfSegment);
         int bytesRead = 0;
         var segmentcount = 0;
         while ((bytesRead = await fs.ReadAsync(buffer)) > 0)
@@ -42,7 +45,7 @@ public abstract class Segmentation
     public async Task<byte[]> GetSpecificSegment(Entities.Folder folder, Entities.File file, SegmentRange range)
     {
         _logger.GetSpecificSegment(file.RelativePath, range.Start, range.End);
-        var buffer = ArrayPool<byte>.Shared.Rent(2048);
+        var buffer = ArrayPool<byte>.Shared.Rent(_sizeOfSegment);
 
         using var fs = GetStream(folder,file);
         fs.Seek(range.Start, SeekOrigin.Begin);

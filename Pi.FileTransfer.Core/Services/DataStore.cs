@@ -215,6 +215,19 @@ public class DataStore
         }
     }
 
+    public int GetReceivedSegmentsCount(Folder folder)
+    {
+        var incomingDataFolder = Path.Combine(folder.FullName, Constants.RootDirectoryName, "Data", "Incoming");
+        if (Directory.Exists(incomingDataFolder))
+        {
+            var segmentFiles = _fileSystem.GetFiles(incomingDataFolder, "*.segment",true).ToList();
+            return segmentFiles.Count;
+        }
+
+        return 0;
+    }
+
+ 
     public async IAsyncEnumerable<TransferReceipt> GetReceivedReceipts(Folder folder)
     {
         var incomingDataFolder = Path.Combine(folder.FullName, Constants.RootDirectoryName, "Data", "Incoming");
@@ -237,6 +250,18 @@ public class DataStore
                     yield return content!;
             }
         }
+    }
+
+    public int GetReceivedReceiptsCount(Folder folder)
+    {
+        var incomingDataFolder = Path.Combine(folder.FullName, Constants.RootDirectoryName, "Data", "Incoming");
+        if (Directory.Exists(incomingDataFolder))
+        {
+            var receiptFiles = _fileSystem.GetFiles(incomingDataFolder, "*.receipt", true).ToList();
+            return receiptFiles.Count;
+        }
+
+        return 0;
     }
 
     public void DeleteFailedItemsOfFile(Destination destination, Folder folder, Guid fileId)

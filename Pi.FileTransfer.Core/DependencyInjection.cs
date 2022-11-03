@@ -1,16 +1,11 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using MediatR;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Pi.FileTransfer.Core.BackgroundServices;
 using Pi.FileTransfer.Core.Common;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using MediatR;
-using System.Reflection;
 using Pi.FileTransfer.Core.Services;
+using System.Reflection;
 
 namespace Pi.FileTransfer.Core;
 public static class DependencyInjection

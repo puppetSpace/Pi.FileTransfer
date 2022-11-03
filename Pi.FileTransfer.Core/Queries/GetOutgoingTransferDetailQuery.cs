@@ -9,12 +9,12 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace Pi.FileTransfer.Core.Queries;
-public class GetTransferDetailQuery : IRequest<IEnumerable<TransferDetail>>
+public class GetOutgoingTransferDetailQuery : IRequest<IEnumerable<OutgoingTransferDetail>>
 {
-    public GetTransferDetailQuery(string folderName) => FolderName = folderName;
+    public GetOutgoingTransferDetailQuery(string folderName) => FolderName = folderName;
     public string FolderName { get;}
 
-    public class GetTransferDetailQueryHandler : IRequestHandler<GetTransferDetailQuery, IEnumerable<TransferDetail>>
+    public class GetTransferDetailQueryHandler : IRequestHandler<GetOutgoingTransferDetailQuery, IEnumerable<OutgoingTransferDetail>>
     {
         private readonly IFolderRepository _folderRepository;
         private readonly DataStore _dataStore;
@@ -25,12 +25,12 @@ public class GetTransferDetailQuery : IRequest<IEnumerable<TransferDetail>>
             _dataStore = dataStore;
         }
 
-        public async Task<IEnumerable<TransferDetail>> Handle(GetTransferDetailQuery request, CancellationToken cancellationToken)
+        public async Task<IEnumerable<OutgoingTransferDetail>> Handle(GetOutgoingTransferDetailQuery request, CancellationToken cancellationToken)
         {
             var folder = await _folderRepository.GetFolder(request.FolderName);
             if(folder == Folder.Empty)
-                return new List<TransferDetail>();
-            var details = new List<TransferDetail>();
+                return new List<OutgoingTransferDetail>();
+            var details = new List<OutgoingTransferDetail>();
             foreach (var destination in folder.Destinations)
             {
                 var failedSegments = await _dataStore.GetFailedSegments(folder, destination).ToListAsync(cancellationToken: cancellationToken);
@@ -47,4 +47,4 @@ public class GetTransferDetailQuery : IRequest<IEnumerable<TransferDetail>>
 
 }
 
-public record TransferDetail(Guid FileId, string Destination, int? ReadTill, List<FailedSegment> FailedSegments, bool HasFailedReceipt);
+public record OutgoingTransferDetail(Guid FileId, string Destination, int? ReadTill, List<FailedSegment> FailedSegments, bool HasFailedReceipt);
