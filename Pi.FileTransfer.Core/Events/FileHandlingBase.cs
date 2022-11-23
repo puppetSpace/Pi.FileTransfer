@@ -8,19 +8,17 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Pi.FileTransfer.Core.Commands;
-public abstract class FileCommandHandlerBase
+namespace Pi.FileTransfer.Core.Events;
+public abstract class FileHandlingBase
 {
     protected ILogger Logger { get; }
     protected TransferService TransferService { get; }
     protected DataStore DataStore { get; }
     public bool IsFileUpdate { get; }
 
-    //private readonly DataStore _transferStore;
-    //private readonly DeltaService _deltaService;
     private readonly ConcurrentDictionary<string, int> _currentBytesRead = new();
 
-    public FileCommandHandlerBase(ILogger logger, TransferService transferService, DataStore dataStore, bool isFileUpdate)
+    public FileHandlingBase(ILogger logger, TransferService transferService, DataStore dataStore, bool isFileUpdate)
     {
         Logger = logger;
         TransferService = transferService;
@@ -29,7 +27,7 @@ public abstract class FileCommandHandlerBase
     }
 
 
-    protected async Task SendSegment(int sequenceNumber, byte[] buffer, Entities.Folder folder, Entities.File file)
+    protected async Task SendSegment(int sequenceNumber, byte[] buffer, Folder folder, Entities.File file)
     {
         var runningTasks = new List<Task>();
         foreach (var destination in folder.Destinations)
@@ -63,7 +61,7 @@ public abstract class FileCommandHandlerBase
             Logger.SendSegmentFailed(file.RelativePath, destination.Name, ex);
             var start = readBytes > 0 ? readBytes - buffer.Length : 0;
             var end = readBytes;
-            await DataStore.StoreFailedSegmentTransfer(destination, folder, file, sequenceNumber, new SegmentRange(start, end),IsFileUpdate);
+            await DataStore.StoreFailedSegmentTransfer(destination, folder, file, sequenceNumber, new SegmentRange(start, end), IsFileUpdate);
         }
         finally
         {

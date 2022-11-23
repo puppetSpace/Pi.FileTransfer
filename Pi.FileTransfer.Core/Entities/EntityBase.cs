@@ -8,5 +8,5 @@ using System.Threading.Tasks;
 namespace Pi.FileTransfer.Core.Entities;
 public class EntityBase
 {
-    public List<IRequest<Unit>> Events { get; set; } = new();
+    public List<INotification> Events { get; set; } = new();
 }

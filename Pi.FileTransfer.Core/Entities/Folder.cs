@@ -1,4 +1,7 @@
 ﻿using Pi.FileTransfer.Core.Commands;
+using Pi.FileTransfer.Core.Events;
+using Pi.FileTransfer.Core.Exceptions;
+using System.Data.SqlTypes;
 
 namespace Pi.FileTransfer.Core.Entities;
 public class Folder : EntityBase
@@ -40,7 +43,7 @@ public class Folder : EntityBase
             RelativePath = path.Replace($"{this.FullName}{Path.DirectorySeparatorChar}", "")
         };
         _files.Add(entity);
-        Events.Add(new AddFileCommand(entity, this));
+        Events.Add(new FileAddedEvent(entity, this));
     }
 
     public void AddFile(File file)
@@ -63,7 +66,27 @@ public class Folder : EntityBase
         if (existing is not null)
         {
             existing.LastModified = lastModified;
-            Events.Add(new UpdateFileCommand(existing, this));
+            Events.Add(new FileUpdatedEvent(existing, this));
+        }
+    }
+
+    public void AddDestination(Destination destination)
+    {
+        if (Destinations.Any(x => string.Equals(x.Name, destination.Name, StringComparison.OrdinalIgnoreCase)))
+            throw new DestinationException($"Destination with name '{destination.Name}' already exists for this folder");
+
+        if (Destinations.Any(x => string.Equals(x.Address, destination.Address, StringComparison.OrdinalIgnoreCase)))
+            throw new InvalidOperationException($"Destination with address '{destination.Address}' already exists for this folder");
+
+        _destinations.Add(destination);
+
+        Events.Add(new DestinationAddedEvent(this, destination));
+    }
+    public void DeleteDestination(string name)
+    {
+        if(Destinations.FirstOrDefault(x=>string.Equals(x.Name,name, StringComparison.OrdinalIgnoreCase)) is var destination && destination is not null)
+        {
+            _destinations.Remove(destination);
         }
     }
 

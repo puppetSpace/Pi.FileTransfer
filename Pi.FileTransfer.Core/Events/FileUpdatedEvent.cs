@@ -8,47 +8,45 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Pi.FileTransfer.Core.Commands;
-public class UpdateFileCommand : IRequest<Unit>
+namespace Pi.FileTransfer.Core.Events;
+public class FileUpdatedEvent : INotification
 {
-    public UpdateFileCommand(Entities.File file, Entities.Folder folder)
+    public FileUpdatedEvent(Entities.File file, Folder folder)
     {
         File = file;
         Folder = folder;
     }
     public Entities.File File { get; }
 
-    public Entities.Folder Folder { get; }
+    public Folder Folder { get; }
 
-    public class UpdateFileCommandHandler : FileCommandHandlerBase, IRequestHandler<UpdateFileCommand>
+    public class FileUpdatedEventHandler : FileHandlingBase, INotificationHandler<FileUpdatedEvent>
     {
         private readonly DeltaService _deltaService;
         private readonly DeltaSegmentation _deltaSegmentation;
-        private readonly ILogger<UpdateFileCommand> _logger;
+        private readonly ILogger<FileUpdatedEvent> _logger;
 
-        public UpdateFileCommandHandler(DeltaService deltaService, DeltaSegmentation deltaSegmentation
-            , TransferService transferService,DataStore dataStore, ILogger<UpdateFileCommand> logger)
-            :base(logger,transferService,dataStore,true)
+        public FileUpdatedEventHandler(DeltaService deltaService, DeltaSegmentation deltaSegmentation
+            , TransferService transferService, DataStore dataStore, ILogger<FileUpdatedEvent> logger)
+            : base(logger, transferService, dataStore, true)
         {
             _deltaService = deltaService;
             _deltaSegmentation = deltaSegmentation;
             _logger = logger;
         }
 
-        public async Task<Unit> Handle(UpdateFileCommand request, CancellationToken cancellationToken)
+        public async Task Handle(FileUpdatedEvent notification, CancellationToken cancellationToken)
         {
-            if (!request.Folder.Destinations.Any())
-                return Unit.Value;
-            
-            _logger.ProcessUpdatedFile(request.File.RelativePath);
-            
-            await _deltaService.CreateDelta(request.Folder, request.File);
-            _deltaService.CreateSignature(request.Folder, request.File);
- 
-            var totalAmountOfSegments = await _deltaSegmentation.Segment(request.Folder, request.File, SendSegment);
-            await SendReceipt(request.Folder, request.File, totalAmountOfSegments);
+            if (!notification.Folder.Destinations.Any())
+                return;
 
-            return Unit.Value;
+            _logger.ProcessUpdatedFile(notification.File.RelativePath);
+
+            await _deltaService.CreateDelta(notification.Folder, notification.File);
+            _deltaService.CreateSignature(notification.Folder, notification.File);
+
+            var totalAmountOfSegments = await _deltaSegmentation.Segment(notification.Folder, notification.File, SendSegment);
+            await SendReceipt(notification.Folder, notification.File, totalAmountOfSegments);
         }
 
         private async Task SendReceipt(Folder folder, Entities.File file, int totalAmountOfSegments)

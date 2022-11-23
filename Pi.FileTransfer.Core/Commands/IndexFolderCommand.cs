@@ -20,7 +20,7 @@ public class IndexFolderCommand : IRequest<Unit>
 
         public Task<Unit> Handle(IndexFolderCommand request, CancellationToken cancellationToken)
         {
-            if (!Directory.Exists(request.Path))
+            if (Directory.Exists(request.Path))
             {
                 _logger.IndexingFolder(request.Path);
                 var directory = new DirectoryInfo(System.IO.Path.Combine(request.Path, Constants.RootDirectoryName));

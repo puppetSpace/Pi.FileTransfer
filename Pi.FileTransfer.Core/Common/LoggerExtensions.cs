@@ -564,3 +564,12 @@ public static partial class LoggerExtensionsFileSystem
     Message = "Delete folder {folder}")]
     public static partial void DeleteFolder(this ILogger logger, string folder);
 }
+
+public static partial class LoggerExtensionsDestinationAddedEvent
+{
+    [LoggerMessage(
+       EventId = 0,
+       Level = LogLevel.Information,
+       Message = "Processing files for destination {destination} for folder '{folder}'")]
+    public static partial void ProcessingAllFilesForDestination(this ILogger logger, string destination, string folder);
+}
