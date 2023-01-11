@@ -62,4 +62,17 @@ public class RetryService : BackgroundService
             _ = await _mediator.Send(new RetryTransferReceiptCommand(failure, destination, folder));
         }
     }
+
+    private async Task RetrySendingFileFromLastPosition(Folder folder, Destination destination)
+    {
+        foreach(var file in folder.Files)
+        {
+            _logger.RetrySendingFileFromLastPosition(file.Name,folder.Name,destination.Name);
+            var lastPosition = await _transferStore.GetLastPosition(folder, destination, file.Id);
+            if(lastPosition is not null)
+            {
+                _ = await _mediator.Send(new RestartTransferFileCommand(file, folder, destination, lastPosition.Value));
+            }
+        }
+    }
 }

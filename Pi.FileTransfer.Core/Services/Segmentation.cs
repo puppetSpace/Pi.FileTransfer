@@ -16,7 +16,7 @@ public abstract class Segmentation
     private readonly IFileSystem _fileSystem;
     private readonly DataStore _dataStore;
     private readonly ILogger _logger;
-    private int _sizeOfSegment;
+    private readonly int _sizeOfSegment;
 
 	public Segmentation(IFileSystem fileSystem, DataStore dataStore, IOptions<AppSettings> options,ILogger logger)
 	{
@@ -29,20 +29,27 @@ public abstract class Segmentation
 
     public async Task<int> Segment(Entities.Folder folder, Entities.File file, Func<int, byte[], Entities.Folder, Entities.File, Task> segmentCreatedFunc)
     {
-        using var fs = GetStream(folder,file);
-        var buffer = ArrayPool<byte>.Shared.Rent(_sizeOfSegment);
-        int bytesRead = 0;
-        var segmentcount = 0;
-        while ((bytesRead = await fs.ReadAsync(buffer)) > 0)
-        {
-            await segmentCreatedFunc(++segmentcount, buffer[0..bytesRead], folder, file);
-            _logger.SegmentingFile(file.RelativePath, segmentcount, bytesRead);
-        }
-
-        return segmentcount;
+        return await Segment(folder, file, 0, segmentCreatedFunc);
     }
 
-    public async Task<byte[]> GetSpecificSegment(Entities.Folder folder, Entities.File file, SegmentRange range)
+	public async Task<int> Segment(Entities.Folder folder, Entities.File file, int startPosition, Func<int, byte[], Entities.Folder, Entities.File, Task> segmentCreatedFunc)
+	{
+		using var fs = GetStream(folder, file);
+		var buffer = ArrayPool<byte>.Shared.Rent(_sizeOfSegment);
+		int bytesRead = startPosition;
+        //todo test
+		var segmentcount = startPosition <= _sizeOfSegment ? 0 : startPosition / _sizeOfSegment;
+        fs.Position = startPosition;
+		while ((bytesRead = await fs.ReadAsync(buffer)) > 0)
+		{
+			await segmentCreatedFunc(++segmentcount, buffer[0..bytesRead], folder, file);
+			_logger.SegmentingFile(file.RelativePath, segmentcount, bytesRead);
+		}
+
+		return segmentcount;
+	}
+
+	public async Task<byte[]> GetSpecificSegment(Entities.Folder folder, Entities.File file, SegmentRange range)
     {
         _logger.GetSpecificSegment(file.RelativePath, range.Start, range.End);
         var buffer = ArrayPool<byte>.Shared.Rent(_sizeOfSegment);

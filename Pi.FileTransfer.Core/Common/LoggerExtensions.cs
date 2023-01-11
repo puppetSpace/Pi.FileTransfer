@@ -51,6 +51,12 @@ public static partial class LoggerExtensionFileRetryService
     Message = "Retry sending receipts of folder '{folder}' for destination '{destination}'")]
     public static partial void RetrySendingReceipts(this ILogger logger, string folder, string destination);
 
+	[LoggerMessage(
+    EventId = 2,
+    Level = LogLevel.Information,
+    Message = "Retry sending file '{fileName}' of folder '{folder}' to destination '{destination}'")]
+	public static partial void RetrySendingFileFormLastPosition(this ILogger logger, string fileName, string folder, string destination);
+
 }
 
 public static partial class LoggerExtensionsAddFileCommand
@@ -572,4 +578,13 @@ public static partial class LoggerExtensionsDestinationAddedEvent
        Level = LogLevel.Information,
        Message = "Processing files for destination {destination} for folder '{folder}'")]
     public static partial void ProcessingAllFilesForDestination(this ILogger logger, string destination, string folder);
+}
+
+public static partial class LoggerExtensionsDestinationAddedEvent
+{
+	[LoggerMessage(
+	   EventId = 0,
+	   Level = LogLevel.Information,
+	   Message = "Processing files for destination {destination} for folder '{folder}'")]
+	public static partial void ProcessingAllFilesForDestination(this ILogger logger, string destination, string folder);
 }
