@@ -12,26 +12,24 @@ using System.Threading.Tasks;
 namespace Pi.FileTransfer.Core.Commands;
 public class RestartTransferFileCommand : IRequest<Unit>
 {
-	public RestartTransferFileCommand(Entities.File file, Folder folder, Destination destination, int lastPosition)
+	public RestartTransferFileCommand(Entities.File file, Folder folder, Destination destination)
 	{
 		File = file;
 		Folder = folder;
 		Destination = destination;
-		LastPosition = lastPosition;
 	}
 
 	public Entities.File File { get; }
 
 	public Folder Folder { get; }
 	public Destination Destination { get; }
-	public int LastPosition { get; }
 
 
 	private class RestartTransferFileCommandHandler : FileHandlingBase, IRequestHandler<RestartTransferFileCommand, Unit>
 	{
 		private readonly FileSegmentation _fileSegmentation;
 
-		public RestartTransferFileCommandHandler(ILogger logger, TransferService transferService, DataStore dataStore, FileSegmentation fileSegmentation) : base(logger, transferService, dataStore, false)
+		public RestartTransferFileCommandHandler(ILogger<RestartTransferFileCommand> logger, TransferService transferService, DataStore dataStore, FileSegmentation fileSegmentation) : base(logger, transferService, dataStore, false)
 		{
 			_fileSegmentation = fileSegmentation;
 		}
@@ -39,13 +37,16 @@ public class RestartTransferFileCommand : IRequest<Unit>
 		//todo logging
 		public async Task<Unit> Handle(RestartTransferFileCommand request, CancellationToken cancellationToken)
 		{
+            var lastPosition = await DataStore.GetLastPosition(request.Folder, request.Destination, request.File.Id);
+			if (lastPosition is null)
+				return Unit.Value;
 
-			async Task SendSegmentForDestination(int sequenceNumber, byte[] buffer, Folder folder, Entities.File file)
+            async Task SendSegmentForDestination(int sequenceNumber, byte[] buffer, Folder folder, Entities.File file)
 			{
 				await SendToDestination(sequenceNumber, buffer, folder, file, request.Destination);
 			}
 
-			var totalAmountOfSegments = await _fileSegmentation.Segment(request.Folder, request.File, request.LastPosition, SendSegmentForDestination);
+			var totalAmountOfSegments = await _fileSegmentation.Segment(request.Folder, request.File, lastPosition.Value, SendSegmentForDestination);
 			await SendReceipt(request.Destination, request.Folder, request.File, totalAmountOfSegments);
 			DataStore.ClearLastPosition(request.Destination, request.Folder, request.File);
 

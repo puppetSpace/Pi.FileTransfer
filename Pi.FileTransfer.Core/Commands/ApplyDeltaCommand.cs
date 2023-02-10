@@ -53,14 +53,12 @@ public class ApplyDeltaCommand : IRequest<Unit>
 
                 var newLastWriteTime = _deltaService.ApplyDelta(tempFile, request.Folder, destination);
 
-                var file = new Entities.File
-                {
-                    Id = request.TransferReceipt.FileId,
-                    Extension = Path.GetExtension(request.TransferReceipt.RelativePath),
-                    RelativePath = request.TransferReceipt.RelativePath,
-                    Name = Path.GetFileName(request.TransferReceipt.RelativePath),
-                    LastModified = newLastWriteTime,
-                };
+                var file = new Entities.File(request.TransferReceipt.FileId
+                    , Path.GetExtension(request.TransferReceipt.RelativePath)
+                    , request.TransferReceipt.RelativePath
+                    , Path.GetFileName(request.TransferReceipt.RelativePath)
+                    , newLastWriteTime);
+
                 request.Folder.AddFile(file);
                 await _folderRepository.Save(request.Folder);
                 _dataStore.DeleteReceivedDataOfFile(request.Folder, request.TransferReceipt.FileId);

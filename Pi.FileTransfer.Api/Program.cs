@@ -16,8 +16,9 @@ builder.Host.UseWindowsService(x =>
     x.ServiceName = "Pi FileTransfer";
 });
 
-var app = builder.Build();
 
+var app = builder.Build();
+app.AddMigration();
 
 
 // Configure the HTTP request pipeline.

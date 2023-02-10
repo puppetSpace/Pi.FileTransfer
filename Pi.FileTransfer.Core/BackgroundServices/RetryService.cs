@@ -32,6 +32,7 @@ public class RetryService : BackgroundService
                 {
                     await RetrySendingSegments(folder, destination);
                     await RetrySendingReceipt(folder, destination);
+                    await RetrySendingFileFromLastPosition(folder, destination);
                 }
             }
 
@@ -41,7 +42,7 @@ public class RetryService : BackgroundService
 
     private async Task RetrySendingSegments(Folder folder, Destination destination)
     {
-        _logger.RetrySendingSegments(folder.Name,destination.Name);
+        _logger.RetrySendingSegments(folder.Name, destination.Name);
         await foreach (var failure in _transferStore.GetFailedSegments(folder, destination))
         {
             IRequest<Unit> request;
@@ -56,7 +57,7 @@ public class RetryService : BackgroundService
 
     private async Task RetrySendingReceipt(Folder folder, Destination destination)
     {
-        _logger.RetrySendingReceipts(folder.Name,destination.Name);
+        _logger.RetrySendingReceipts(folder.Name, destination.Name);
         await foreach (var failure in _transferStore.GetFailedReceipts(folder, destination))
         {
             _ = await _mediator.Send(new RetryTransferReceiptCommand(failure, destination, folder));
@@ -65,14 +66,10 @@ public class RetryService : BackgroundService
 
     private async Task RetrySendingFileFromLastPosition(Folder folder, Destination destination)
     {
-        foreach(var file in folder.Files)
+        foreach (var file in folder.Files)
         {
-            _logger.RetrySendingFileFromLastPosition(file.Name,folder.Name,destination.Name);
-            var lastPosition = await _transferStore.GetLastPosition(folder, destination, file.Id);
-            if(lastPosition is not null)
-            {
-                _ = await _mediator.Send(new RestartTransferFileCommand(file, folder, destination, lastPosition.Value));
-            }
+            _logger.RetrySendingFileFromLastPosition(file.Name, folder.Name, destination.Name);
+            _ = await _mediator.Send(new RestartTransferFileCommand(file, folder, destination));
         }
     }
 }
