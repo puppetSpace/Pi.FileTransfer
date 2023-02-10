@@ -1,10 +1,11 @@
 ﻿using MediatR;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Pi.FileTransfer.Core.Commands;
-using Pi.FileTransfer.Core.Entities;
+using Pi.FileTransfer.Core.Destinations;
+using Pi.FileTransfer.Core.Folders;
 using Pi.FileTransfer.Core.Interfaces;
 using Pi.FileTransfer.Core.Services;
+using Pi.FileTransfer.Core.Transfers.Commands;
 
 namespace Pi.FileTransfer.Core.BackgroundServices;
 public class RetryService : BackgroundService

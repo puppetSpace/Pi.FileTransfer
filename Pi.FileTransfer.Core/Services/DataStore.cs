@@ -1,16 +1,12 @@
 ﻿using MediatR;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Pi.FileTransfer.Core.Commands;
 using Pi.FileTransfer.Core.Common;
-using Pi.FileTransfer.Core.Entities;
+using Pi.FileTransfer.Core.Destinations;
+using Pi.FileTransfer.Core.Folders;
+using Pi.FileTransfer.Core.Folders.Commands;
 using Pi.FileTransfer.Core.Interfaces;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Text.Json;
-using System.Threading.Tasks;
+using Pi.FileTransfer.Core.Transfers;
 
 namespace Pi.FileTransfer.Core.Services;
 public class DataStore
@@ -28,7 +24,7 @@ public class DataStore
         _logger = logger;
     }
 
-    public async Task StoreLastPosition(Destination destination, Entities.Folder folder, Entities.File file, int lastPosition)
+    public async Task StoreLastPosition(Destination destination, Folder folder, Files.File file, int lastPosition)
     {
         try
         {
@@ -45,7 +41,7 @@ public class DataStore
         }
     }
 
-    public async Task<int?> GetLastPosition(Entities.Folder folder, Destination destination, Guid fileId)
+    public async Task<int?> GetLastPosition(Folder folder, Destination destination, Guid fileId)
     {
         try
         {
@@ -64,7 +60,7 @@ public class DataStore
         }
     }
 
-    public async Task StoreFailedSegmentTransfer(Destination destination, Entities.Folder folder, Entities.File file, int sequencenumber, SegmentRange range, bool isFileUpdate)
+    public async Task StoreFailedSegmentTransfer(Destination destination, Folder folder, Files.File file, int sequencenumber, SegmentRange range, bool isFileUpdate)
     {
         try
         {
@@ -81,7 +77,7 @@ public class DataStore
         }
     }
 
-    public async Task StoreFailedReceiptTransfer(Destination destination, Entities.Folder folder, Entities.File file, int totalAmountOfSegments, bool isFileUpdate)
+    public async Task StoreFailedReceiptTransfer(Destination destination, Folder folder, Files.File file, int totalAmountOfSegments, bool isFileUpdate)
     {
         try
         {
@@ -90,7 +86,7 @@ public class DataStore
             _fileSystem.CreateDirectory(path);
 
             var transferFile = Path.Combine(path, $"{file.Id}.failedreceipt");
-            await _fileSystem.WritetoFile(transferFile, new FailedReceipt(file.Id, totalAmountOfSegments,isFileUpdate));
+            await _fileSystem.WritetoFile(transferFile, new FailedReceipt(file.Id, totalAmountOfSegments, isFileUpdate));
         }
         catch (Exception ex)
         {
@@ -98,7 +94,7 @@ public class DataStore
         }
     }
 
-    public async IAsyncEnumerable<FailedSegment> GetFailedSegments(Entities.Folder folder, Destination destination)
+    public async IAsyncEnumerable<FailedSegment> GetFailedSegments(Folder folder, Destination destination)
     {
         var path = Path.Combine(folder.FullName, Constants.RootDirectoryName, "Data", "Outgoing", destination.Name, "Failed");
         if (Directory.Exists(path))
@@ -116,14 +112,14 @@ public class DataStore
                 {
                     _logger.FailedToGetContentOfFailedSegment(file, ex);
                 }
-                if(content is not null)
+                if (content is not null)
                     yield return content;
             }
         }
 
     }
 
-    public async IAsyncEnumerable<FailedReceipt> GetFailedReceipts(Entities.Folder folder, Destination destination)
+    public async IAsyncEnumerable<FailedReceipt> GetFailedReceipts(Folder folder, Destination destination)
     {
         var path = Path.Combine(folder.FullName, Constants.RootDirectoryName, "Data", "Outgoing", destination.Name, "Failed");
         if (Directory.Exists(path))
@@ -220,14 +216,14 @@ public class DataStore
         var incomingDataFolder = Path.Combine(folder.FullName, Constants.RootDirectoryName, "Data", "Incoming");
         if (Directory.Exists(incomingDataFolder))
         {
-            var segmentFiles = _fileSystem.GetFiles(incomingDataFolder, "*.segment",true).ToList();
+            var segmentFiles = _fileSystem.GetFiles(incomingDataFolder, "*.segment", true).ToList();
             return segmentFiles.Count;
         }
 
         return 0;
     }
 
- 
+
     public async IAsyncEnumerable<TransferReceipt> GetReceivedReceipts(Folder folder)
     {
         var incomingDataFolder = Path.Combine(folder.FullName, Constants.RootDirectoryName, "Data", "Incoming");
@@ -335,7 +331,7 @@ public class DataStore
         }
     }
 
-    public void ClearLastPosition(Destination destination, Folder folder, Entities.File file)
+    public void ClearLastPosition(Destination destination, Folder folder, Files.File file)
     {
         try
         {
@@ -350,11 +346,11 @@ public class DataStore
         }
     }
 
-    public string GetSignatureFilePath(Folder folder, Entities.File file)
+    public string GetSignatureFilePath(Folder folder, Files.File file)
     {
         try
         {
-            _logger.CreateSignatureFile(file.RelativePath,file.Id);
+            _logger.CreateSignatureFile(file.RelativePath, file.Id);
             var path = Path.Combine(folder.FullName, Constants.RootDirectoryName, "Data", "Signatures");
             _fileSystem.CreateDirectory(path);
             var signatureFile = Path.Combine(path, file.Id.ToString());
@@ -367,7 +363,7 @@ public class DataStore
         }
     }
 
-    public string GetDeltaFilePath(Folder folder, Entities.File file)
+    public string GetDeltaFilePath(Folder folder, Files.File file)
     {
         try
         {
@@ -384,7 +380,7 @@ public class DataStore
         }
     }
 
-    public async Task<byte[]> GetSignatureFileContent(Folder folder, Entities.File file)
+    public async Task<byte[]> GetSignatureFileContent(Folder folder, Files.File file)
     {
         try
         {

@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Options;
 using Pi.FileTransfer.Core;
 using Pi.FileTransfer.Core.Common;
+using Pi.FileTransfer.Core.Folders;
 using Pi.FileTransfer.Core.Interfaces;
 using System.Buffers;
 using System.Text.Json;
@@ -19,7 +20,7 @@ public class FileSystem : IFileSystem
         _logger = logger;
     }
 
-    public IEnumerable<(string file, DateTime lastModified)> GetFiles(Core.Entities.Folder folder)
+    public IEnumerable<(string file, DateTime lastModified)> GetFiles(Folder folder)
     {
         if (!Directory.Exists(folder.FullName))
             throw new DirectoryNotFoundException($"'{folder.FullName}' is not a directory or does not exist");

@@ -1,7 +1,7 @@
 ﻿using MediatR;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Pi.FileTransfer.Core.Commands;
+using Pi.FileTransfer.Core.Files.Commands;
 using Pi.FileTransfer.Core.Interfaces;
 using Pi.FileTransfer.Core.Services;
 

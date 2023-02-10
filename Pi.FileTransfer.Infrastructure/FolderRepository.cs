@@ -1,13 +1,11 @@
 ﻿using MediatR;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Pi.FileTransfer.Core.Common;
-using Pi.FileTransfer.Core.Entities;
+using Pi.FileTransfer.Core.Destinations;
+using Pi.FileTransfer.Core.Folders;
 using Pi.FileTransfer.Core.Interfaces;
-using Pi.FileTransfer.Infrastructure.DbModels;
-using System.Text.Json;
 
 namespace Pi.FileTransfer.Infrastructure;
 internal class FolderRepository : IFolderRepository
@@ -15,7 +13,6 @@ internal class FolderRepository : IFolderRepository
     private readonly string _basePath;
     private readonly IMediator _mediator;
     private readonly FileContext _fileContext;
-    private static readonly SemaphoreSlim _lockerDestinations = new(1);
 
     public FolderRepository(IOptions<AppSettings> options, IMediator mediator, IServiceProvider serviceProvider)
     {
@@ -62,7 +59,7 @@ internal class FolderRepository : IFolderRepository
             .ToListAsync();
 
         var toDelete = existing.Where(x => !folder.Files.Any(y => y.RelativePath == x.RelativePath));
-        var toAdd = folder.Files.Where(x => !existing.Any(y => y.RelativePath == x.RelativePath)).Select(x=>new DbModels.File() { Id = x.Id, Extension = x.Extension, Folder = folder.Name, LastModified = x.LastModified, Name = x.Name, RelativePath = x.RelativePath });
+        var toAdd = folder.Files.Where(x => !existing.Any(y => y.RelativePath == x.RelativePath)).Select(x => new DbModels.File() { Id = x.Id, Extension = x.Extension, Folder = folder.Name, LastModified = x.LastModified, Name = x.Name, RelativePath = x.RelativePath });
 
         _fileContext.Files.RemoveRange(toDelete);
         _fileContext.Files.AddRange(toAdd);
@@ -77,7 +74,7 @@ internal class FolderRepository : IFolderRepository
             .ToListAsync();
 
         var toDelete = existing.Where(x => !folder.Files.Any(y => y.Name == x.Name));
-        var toAdd = folder.Destinations.Where(x => !existing.Any(y => y.Name == x.Name)).Select(x => new DbModels.Destination() { Name = x.Name, Folder = folder.Name, Address = x.Address});
+        var toAdd = folder.Destinations.Where(x => !existing.Any(y => y.Name == x.Name)).Select(x => new DbModels.Destination() { Name = x.Name, Folder = folder.Name, Address = x.Address });
 
         _fileContext.Destinations.RemoveRange(toDelete);
         _fileContext.Destinations.AddRange(toAdd);
@@ -90,22 +87,22 @@ internal class FolderRepository : IFolderRepository
         return new(folderName, Path.Combine(_basePath, folderName), await GetFiles(folder), await GetDestinations(folder));
     }
 
-    private async Task<List<Core.Entities.File>> GetFiles(string folder)
+    private async Task<List<Core.Files.File>> GetFiles(string folder)
     {
         return await _fileContext
             .Files
             .Where(x => x.Folder == folder)
-            .Select(x=>new Core.Entities.File(x.Name,x.Extension,x.RelativePath,x.LastModified))
+            .Select(x => new Core.Files.File(x.Name, x.Extension, x.RelativePath, x.LastModified))
             .AsNoTracking()
             .ToListAsync();
     }
 
-    private async Task<List<Core.Entities.Destination>> GetDestinations(string folder)
+    private async Task<List<Destination>> GetDestinations(string folder)
     {
         return await _fileContext
              .Destinations
              .Where(x => x.Folder == folder)
-             .Select(x => new Core.Entities.Destination(x.Name,x.Address))
+             .Select(x => new Destination(x.Name, x.Address))
              .AsNoTracking()
              .ToListAsync();
     }

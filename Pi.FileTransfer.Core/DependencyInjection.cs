@@ -4,7 +4,9 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Pi.FileTransfer.Core.BackgroundServices;
 using Pi.FileTransfer.Core.Common;
+using Pi.FileTransfer.Core.Files.Services;
 using Pi.FileTransfer.Core.Services;
+using Pi.FileTransfer.Core.Transfers.Services;
 using System.Reflection;
 
 namespace Pi.FileTransfer.Core;

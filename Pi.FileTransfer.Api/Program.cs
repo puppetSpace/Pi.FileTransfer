@@ -1,9 +1,11 @@
 using MediatR;
 using Pi.FileTransfer.Core;
-using Pi.FileTransfer.Core.Commands;
-using Pi.FileTransfer.Core.Entities;
-using Pi.FileTransfer.Core.Queries;
-using Pi.FileTransfer.Core.Services;
+using Pi.FileTransfer.Core.Destinations;
+using Pi.FileTransfer.Core.Destinations.Commands;
+using Pi.FileTransfer.Core.Folders.Queries;
+using Pi.FileTransfer.Core.Transfers;
+using Pi.FileTransfer.Core.Transfers.Commands;
+using Pi.FileTransfer.Core.Transfers.Queries;
 using Pi.FileTransfer.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -45,11 +47,11 @@ managementEndPoint.MapGet("/folders/{folder}/outgoing/details", async (IMediator
 {
     return await mediator.Send(new GetOutgoingTransferDetailQuery(folder));
 });
-managementEndPoint.MapPost("/folders/{folder}/destination", async (IMediator mediator, Destination destination,string folder) =>
+managementEndPoint.MapPost("/folders/{folder}/destination", async (IMediator mediator, Destination destination, string folder) =>
 {
-    await mediator.Send(new AddDestinationToFolderCommand(folder,destination));
+    await mediator.Send(new AddDestinationToFolderCommand(folder, destination));
 });
-managementEndPoint.MapDelete("/folders/{folder}/destination/{destination}", async (IMediator mediator, string folder,string destination) =>
+managementEndPoint.MapDelete("/folders/{folder}/destination/{destination}", async (IMediator mediator, string folder, string destination) =>
 {
     await mediator.Send(new DeleteDestinationFromFolderCommand(folder, destination));
 });

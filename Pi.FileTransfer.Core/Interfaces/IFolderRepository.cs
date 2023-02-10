@@ -1,4 +1,4 @@
-﻿using Pi.FileTransfer.Core.Entities;
+﻿using Pi.FileTransfer.Core.Folders;
 using System;
 using System.Collections.Generic;
 using System.Linq;
