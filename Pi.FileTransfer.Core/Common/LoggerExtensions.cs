@@ -377,6 +377,12 @@ public static partial class LoggerExtensionsDataStore
     Level = LogLevel.Error,
     Message = "Failed to get delta signature content for '{file}' with name '{fileId}'")]
     public static partial void FailedToGetGetSignatureFileContent(this ILogger logger, string file, Guid fileId, Exception exception);
+
+    [LoggerMessage(
+    EventId = 33,
+    Level = LogLevel.Warning,
+    Message = "Signature does not exists for file '{file}'. Unable to create delta")]
+    public static partial void NoSignatureForFilePresent(this ILogger logger, string file);
 }
 
 public static partial class LoggerExtensionsFileIndex

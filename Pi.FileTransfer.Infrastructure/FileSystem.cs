@@ -127,4 +127,7 @@ public class FileSystem : IFileSystem
         if(Directory.Exists(incomingDataFolder))
             Directory.Delete(incomingDataFolder,true);
     }
+
+    public bool FileExist(string path)
+        => File.Exists(path);
 }

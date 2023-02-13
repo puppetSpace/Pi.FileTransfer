@@ -1,11 +1,13 @@
 ﻿using Microsoft.Extensions.Logging;
 using Octodiff.Core;
+using Pi.FileTransfer.Core.Common;
 using Pi.FileTransfer.Core.Files;
 using Pi.FileTransfer.Core.Folders;
 using Pi.FileTransfer.Core.Interfaces;
 using Pi.FileTransfer.Core.Services;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -13,13 +15,11 @@ using System.Threading.Tasks;
 namespace Pi.FileTransfer.Core.Files.Services;
 public class DeltaService
 {
-    private readonly DataStore _dataStore;
     private readonly IFileSystem _fileSystem;
     private readonly ILogger<DeltaService> _logger;
 
-    public DeltaService(DataStore dataStore, IFileSystem fileSystem, ILogger<DeltaService> logger)
+    public DeltaService(IFileSystem fileSystem, ILogger<DeltaService> logger)
     {
-        _dataStore = dataStore;
         _fileSystem = fileSystem;
         _logger = logger;
     }
@@ -29,7 +29,7 @@ public class DeltaService
         _logger.CreateSignature(file.RelativePath);
         using var fs = _fileSystem.GetReadFileStream(file.GetFullPath(folder));
         var signatureBuilder = new SignatureBuilder();
-        using var writeStream = _fileSystem.GetWriteFileStream(_dataStore.GetSignatureFilePath(folder, file));
+        using var writeStream = _fileSystem.GetWriteFileStream(FolderUtils.GetSignaturesFolderPath(folder.FullName,file.Id.ToString()));
         var signatureWriter = new SignatureWriter(writeStream);
         signatureBuilder.Build(fs, signatureWriter);
         writeStream.Flush();
@@ -38,19 +38,28 @@ public class DeltaService
     public async Task CreateDelta(Folder folder, File file)
     {
         _logger.CreateDelta(file.RelativePath);
-        using var fs = _fileSystem.GetReadFileStream(file.GetFullPath(folder));
-        using var deltaStream = _fileSystem.GetWriteFileStream(_dataStore.GetDeltaFilePath(folder, file));
-        using var signatureStream = new MemoryStream(await _dataStore.GetSignatureFileContent(folder, file));
-        var signatureReader = new SignatureReader(signatureStream, new LogProgressReporter(_logger));
-        var deltaWriter = new AggregateCopyOperationsDecorator(new BinaryDeltaWriter(deltaStream));
-        var deltaBuilder = new DeltaBuilder();
-        deltaBuilder.BuildDelta(fs, signatureReader, deltaWriter);
-        deltaStream.Flush();
+
+        var signatureFile = FolderUtils.GetSignaturesFolderPath(file.Id.ToString());
+        if (!_fileSystem.FileExist(signatureFile))
+        {
+            _logger?.NoSignatureForFilePresent(file.GetFullPath(folder));
+        }
+        else
+        {
+            using var fs = _fileSystem.GetReadFileStream(file.GetFullPath(folder));
+            using var deltaStream = _fileSystem.GetWriteFileStream(FolderUtils.GetDeltasFolderPath(folder.FullName, file.Id.ToString()));
+            using var signatureStream = new MemoryStream(await _fileSystem.GetRawContentOfFile(signatureFile));
+            var signatureReader = new SignatureReader(signatureStream, new LogProgressReporter(_logger));
+            var deltaWriter = new AggregateCopyOperationsDecorator(new BinaryDeltaWriter(deltaStream));
+            var deltaBuilder = new DeltaBuilder();
+            deltaBuilder.BuildDelta(fs, signatureReader, deltaWriter);
+            deltaStream.Flush();
+        }
     }
 
     public DateTime ApplyDelta(string deltaFilePath, Folder folder, string destination)
     {
-        var tempPath = _dataStore.GetIncomingTempFilePath(folder, $"delta_{Guid.NewGuid()}");
+        var tempPath = FolderUtils.GetIncomingFolderTempPath(folder.FullName, $"delta_{Guid.NewGuid()}");
         _logger.ApplyDelta(tempPath, destination);
         using (var fs = _fileSystem.GetReadFileStream(destination))
         {

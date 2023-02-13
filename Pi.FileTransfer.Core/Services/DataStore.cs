@@ -158,7 +158,7 @@ public class DataStore
             var folder = Path.Combine(_options.Value.BasePath, transferSegment.FolderName);
             await _mediator.Send(new IndexFolderCommand(folder));
 
-            var incomingDataFolder = FolderUtils.GetIncomingFolderPathForFile(folder, transferSegment.FileId);
+            var incomingDataFolder = FolderUtils.GetIncomingFolderPath(folder, transferSegment.FileId.ToString());
             _fileSystem.CreateDirectory(incomingDataFolder);
 
             var segmentPath = Path.Combine(incomingDataFolder, $"{transferSegment.Sequencenumber}_{transferSegment.FileId}.segment");
@@ -195,7 +195,7 @@ public class DataStore
 
     public async IAsyncEnumerable<TransferSegment> GetReceivedSegmentsForFile(Folder folder, Guid fileId)
     {
-        var incomingDataFolder = FolderUtils.GetIncomingFolderPathForFile(folder.FullName, fileId);
+        var incomingDataFolder = FolderUtils.GetIncomingFolderPath(folder.FullName, fileId.ToString());
         if (Directory.Exists(incomingDataFolder))
         {
             var segmentFiles = _fileSystem.GetFiles(incomingDataFolder, "*.segment").ToList();
@@ -334,7 +334,7 @@ public class DataStore
         try
         {
             _logger.DeleteReceivedData(folder.Name, fileId);
-            var incomingDataFolder = FolderUtils.GetIncomingFolderPathForFile(folder.FullName,fileId);
+            var incomingDataFolder = FolderUtils.GetIncomingFolderPath(folder.FullName, fileId.ToString());
             _fileSystem.DeleteDirectory(incomingDataFolder);
         }
         catch (Exception ex)
@@ -357,70 +357,5 @@ public class DataStore
         {
             _logger.FailedToClearLastPosition(file.RelativePath, destination.Name, ex);
         }
-    }
-
-    public string GetSignatureFilePath(Folder folder, Files.File file)
-    {
-        //todo database
-        try
-        {
-            _logger.CreateSignatureFile(file.RelativePath, file.Id);
-            var path = Path.Combine(folder.FullName, Constants.RootDirectoryName, "Data", "Signatures");
-            _fileSystem.CreateDirectory(path);
-            var signatureFile = Path.Combine(path, file.Id.ToString());
-            return signatureFile;
-        }
-        catch (Exception ex)
-        {
-            _logger?.FailedToCreateSignatureFile(file.RelativePath, file.Id, ex);
-            return String.Empty;
-        }
-    }
-
-    public string GetDeltaFilePath(Folder folder, Files.File file)
-    {
-        //todo database
-        try
-        {
-            _logger.CreateSignatureFile(file.RelativePath, file.Id);
-            var path = Path.Combine(folder.FullName, Constants.RootDirectoryName, "Data", "Deltas");
-            _fileSystem.CreateDirectory(path);
-            var deltaFile = Path.Combine(path, file.Id.ToString());
-            return deltaFile;
-        }
-        catch (Exception ex)
-        {
-            _logger?.FailedToCreateSignatureFile(file.RelativePath, file.Id, ex);
-            return String.Empty;
-        }
-    }
-
-    public async Task<byte[]> GetSignatureFileContent(Folder folder, Files.File file)
-    {
-        try
-        {
-            _logger.GetSignatureFileContent(file.RelativePath, file.Id);
-            var path = Path.Combine(folder.FullName, Constants.RootDirectoryName, "Data", "Signatures", file.Id.ToString());
-            if (System.IO.File.Exists(path))
-            {
-                return await _fileSystem.GetRawContentOfFile(path);
-            }
-            else
-            {
-                return Array.Empty<byte>();
-            }
-        }
-        catch (Exception ex)
-        {
-            _logger?.FailedToGetGetSignatureFileContent(file.RelativePath, file.Id, ex);
-            return Array.Empty<byte>();
-        }
-    }
-
-    public string GetIncomingTempFilePath(Folder folder, string fileName)
-    {
-        var tempPath = Path.Combine(folder.FullName, Constants.RootDirectoryName, "Data", "Incoming", "Temp");
-        _fileSystem.CreateDirectory(tempPath);
-        return Path.Combine(tempPath, fileName);
     }
 }

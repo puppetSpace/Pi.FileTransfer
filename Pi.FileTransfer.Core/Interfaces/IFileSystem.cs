@@ -16,4 +16,5 @@ public interface IFileSystem
     void DeleteDirectory(string incomingDataFolder);
     Task<byte[]> GetRawContentOfFile(string file);
     void CopyFile(string source, string destination);
+    bool FileExist(string path);
 }

@@ -25,6 +25,9 @@ public class IndexFolderCommand : IRequest<Unit>
                 _logger.IndexingFolder(request.Path);
                 CreateSyncFolder(request.Path);
                 CreateIncomingFolder(request.Path);
+                CreateIncomingTempFolder(request.Path);
+                CreateDeltaFolderFolder(request.Path);
+                CreateSignatureFolder(request.Path);
             }
             return Unit.Task;
         }
@@ -37,6 +40,15 @@ public class IndexFolderCommand : IRequest<Unit>
         }
 
         private static void CreateIncomingFolder(string folderPath)
-         => System.IO.Directory.CreateDirectory(FolderUtils.GetIncomingFolderPath(folderPath));
+            => System.IO.Directory.CreateDirectory(FolderUtils.GetIncomingFolderPath(folderPath));
+
+        private static void CreateIncomingTempFolder(string folderPath)
+            => System.IO.Directory.CreateDirectory(FolderUtils.GetIncomingFolderTempPath(folderPath));
+
+        private static void CreateDeltaFolderFolder(string folderPath)
+            => System.IO.Directory.CreateDirectory(FolderUtils.GetDeltasFolderPath(folderPath));
+
+        private static void CreateSignatureFolder(string folderPath)
+            => System.IO.Directory.CreateDirectory(FolderUtils.GetSignaturesFolderPath(folderPath));
     }
 }
