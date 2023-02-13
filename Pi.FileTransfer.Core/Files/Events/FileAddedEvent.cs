@@ -8,7 +8,6 @@ using Pi.FileTransfer.Core.Transfers.Services;
 using System.Collections.Concurrent;
 
 namespace Pi.FileTransfer.Core.Files.Events;
-//should actualy be a notification. but is is cleaner to have commands for everything
 public class FileAddedEvent : INotification
 {
     public FileAddedEvent(File file, Folder folder)

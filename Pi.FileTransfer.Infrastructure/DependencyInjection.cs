@@ -22,7 +22,7 @@ public static class DependencyInjection
                 var dataDir = System.IO.Directory.CreateDirectory(Path.Combine(appsettings.Value.BasePath, ".data"));
 
                 options.UseSqlite($"DataSource={System.IO.Path.Combine(dataDir.FullName,"Local.db")}");
-            });
+            }, ServiceLifetime.Transient);
 
         services.AddTransient<IFolderRepository, FolderRepository>();
         services.AddTransient<IFileSystem, FileSystem>();
@@ -31,8 +31,7 @@ public static class DependencyInjection
 
     public static void AddMigration(this IHost host)
     {
-        var scope = host.Services.CreateScope();
-        var dbcontext = scope.ServiceProvider.GetRequiredService<FileContext>();
-        dbcontext.Database.Migrate();
+        using var dbContext = host.Services.GetRequiredService<FileContext>();
+        dbContext.Database.Migrate();
     }
 }

@@ -11,14 +11,12 @@ namespace Pi.FileTransfer.Infrastructure;
 internal class FolderRepository : IFolderRepository
 {
     private readonly string _basePath;
-    private readonly IMediator _mediator;
     private readonly FileContext _fileContext;
 
-    public FolderRepository(IOptions<AppSettings> options, IMediator mediator, IServiceProvider serviceProvider)
+    public FolderRepository(IOptions<AppSettings> options, FileContext fileContext)
     {
         _basePath = options.Value.BasePath;
-        _mediator = mediator;
-        _fileContext = serviceProvider.CreateScope().ServiceProvider.GetRequiredService<FileContext>();
+        _fileContext = fileContext;
     }
 
     public async IAsyncEnumerable<Folder> GetFolders()
@@ -46,8 +44,6 @@ internal class FolderRepository : IFolderRepository
         await SaveDestinations(folder);
 
         await _fileContext.SaveChangesAsync();
-        foreach (var @event in folder.Events)
-            _ = _mediator.Publish(@event);
     }
 
     private async Task SaveFileIndex(Folder folder)

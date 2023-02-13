@@ -17,7 +17,6 @@ public static class DependencyInjection
         services.Configure<AppSettings>(configuration.GetSection("AppSettings"));
         services.AddSingleton<IValidateOptions<AppSettings>, AppSettingsValidation>();
         services.AddMediatR(Assembly.GetExecutingAssembly());
-        services.AddTransient<FileIndexer>();
         services.AddTransient<FileSegmentation>();
         services.AddTransient<DeltaSegmentation>();
         services.AddTransient<TransferService>();
