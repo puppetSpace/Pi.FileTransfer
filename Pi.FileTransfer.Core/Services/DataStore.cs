@@ -26,6 +26,7 @@ public class DataStore
 
     public async Task StoreLastPosition(Destination destination, Folder folder, Files.File file, int lastPosition)
     {
+        //todo save in database
         try
         {
             _logger.StoreLastPosition(lastPosition, file.RelativePath, destination.Name);
@@ -43,6 +44,7 @@ public class DataStore
 
     public async Task<int?> GetLastPosition(Folder folder, Destination destination, Guid fileId)
     {
+        //todo get from database
         try
         {
             var path = Path.Combine(folder.FullName, Constants.RootDirectoryName, "Data", "Outgoing", destination.Name);
@@ -62,6 +64,7 @@ public class DataStore
 
     public async Task StoreFailedSegmentTransfer(Destination destination, Folder folder, Files.File file, int sequencenumber, SegmentRange range, bool isFileUpdate)
     {
+        //todo save in database
         try
         {
             _logger.StoreFailedSegment(sequencenumber, file.RelativePath, destination.Name);
@@ -79,6 +82,7 @@ public class DataStore
 
     public async Task StoreFailedReceiptTransfer(Destination destination, Folder folder, Files.File file, int totalAmountOfSegments, bool isFileUpdate)
     {
+        //todo save in database
         try
         {
             _logger.StoreFailedReceipt(file.RelativePath, destination.Name);
@@ -96,6 +100,7 @@ public class DataStore
 
     public async IAsyncEnumerable<FailedSegment> GetFailedSegments(Folder folder, Destination destination)
     {
+        //todo get from database
         var path = Path.Combine(folder.FullName, Constants.RootDirectoryName, "Data", "Outgoing", destination.Name, "Failed");
         if (Directory.Exists(path))
         {
@@ -121,6 +126,7 @@ public class DataStore
 
     public async IAsyncEnumerable<FailedReceipt> GetFailedReceipts(Folder folder, Destination destination)
     {
+        //todo get from database
         var path = Path.Combine(folder.FullName, Constants.RootDirectoryName, "Data", "Outgoing", destination.Name, "Failed");
         if (Directory.Exists(path))
         {
@@ -152,7 +158,7 @@ public class DataStore
             var folder = Path.Combine(_options.Value.BasePath, transferSegment.FolderName);
             await _mediator.Send(new IndexFolderCommand(folder));
 
-            var incomingDataFolder = Path.Combine(folder, Constants.RootDirectoryName, "Data", "Incoming", transferSegment.FileId.ToString());
+            var incomingDataFolder = FolderUtils.GetIncomingFolderPathForFile(folder, transferSegment.FileId);
             _fileSystem.CreateDirectory(incomingDataFolder);
 
             var segmentPath = Path.Combine(incomingDataFolder, $"{transferSegment.Sequencenumber}_{transferSegment.FileId}.segment");
@@ -167,6 +173,7 @@ public class DataStore
 
     public async Task StoreReceivedReceipt(TransferReceipt transferReceipt)
     {
+        //todo save in database
         try
         {
             _logger.StoreReceivedReceipt(transferReceipt.RelativePath, transferReceipt.FolderName);
@@ -188,7 +195,7 @@ public class DataStore
 
     public async IAsyncEnumerable<TransferSegment> GetReceivedSegmentsForFile(Folder folder, Guid fileId)
     {
-        var incomingDataFolder = Path.Combine(folder.FullName, Constants.RootDirectoryName, "Data", "Incoming", fileId.ToString());
+        var incomingDataFolder = FolderUtils.GetIncomingFolderPathForFile(folder.FullName, fileId);
         if (Directory.Exists(incomingDataFolder))
         {
             var segmentFiles = _fileSystem.GetFiles(incomingDataFolder, "*.segment").ToList();
@@ -213,7 +220,7 @@ public class DataStore
 
     public int GetReceivedSegmentsCount(Folder folder)
     {
-        var incomingDataFolder = Path.Combine(folder.FullName, Constants.RootDirectoryName, "Data", "Incoming");
+        var incomingDataFolder = FolderUtils.GetIncomingFolderPath(folder.FullName);
         if (Directory.Exists(incomingDataFolder))
         {
             var segmentFiles = _fileSystem.GetFiles(incomingDataFolder, "*.segment", true).ToList();
@@ -226,6 +233,7 @@ public class DataStore
 
     public async IAsyncEnumerable<TransferReceipt> GetReceivedReceipts(Folder folder)
     {
+        //totdo get from database
         var incomingDataFolder = Path.Combine(folder.FullName, Constants.RootDirectoryName, "Data", "Incoming");
         if (Directory.Exists(incomingDataFolder))
         {
@@ -250,6 +258,7 @@ public class DataStore
 
     public int GetReceivedReceiptsCount(Folder folder)
     {
+        //todo get from database
         var incomingDataFolder = Path.Combine(folder.FullName, Constants.RootDirectoryName, "Data", "Incoming");
         if (Directory.Exists(incomingDataFolder))
         {
@@ -262,6 +271,7 @@ public class DataStore
 
     public void DeleteFailedItemsOfFile(Destination destination, Folder folder, Guid fileId)
     {
+        //todo do in database
         try
         {
             var path = Path.Combine(folder.FullName, Constants.RootDirectoryName, "Data", "Outgoing", destination.Name, "Failed");
@@ -283,6 +293,7 @@ public class DataStore
 
     public void DeleteFailedSegment(Destination destination, Folder folder, FailedSegment failedSegment)
     {
+        //todo database
         try
         {
             var path = Path.Combine(folder.FullName, Constants.RootDirectoryName, "Data", "Outgoing", destination.Name, "Failed");
@@ -301,6 +312,7 @@ public class DataStore
 
     public void DeleteFailedReceipt(Destination destination, Folder folder, FailedReceipt failedReceipt)
     {
+        //todo database
         try
         {
             var path = Path.Combine(folder.FullName, Constants.RootDirectoryName, "Data", "Outgoing", destination.Name, "Failed");
@@ -322,7 +334,7 @@ public class DataStore
         try
         {
             _logger.DeleteReceivedData(folder.Name, fileId);
-            var incomingDataFolder = Path.Combine(folder.FullName, Constants.RootDirectoryName, "Data", "Incoming", fileId.ToString());
+            var incomingDataFolder = FolderUtils.GetIncomingFolderPathForFile(folder.FullName,fileId);
             _fileSystem.DeleteDirectory(incomingDataFolder);
         }
         catch (Exception ex)
@@ -333,6 +345,7 @@ public class DataStore
 
     public void ClearLastPosition(Destination destination, Folder folder, Files.File file)
     {
+        //todo database
         try
         {
             _logger.ClearLastPosition(file.RelativePath, destination.Name);
@@ -348,6 +361,7 @@ public class DataStore
 
     public string GetSignatureFilePath(Folder folder, Files.File file)
     {
+        //todo database
         try
         {
             _logger.CreateSignatureFile(file.RelativePath, file.Id);
@@ -365,6 +379,7 @@ public class DataStore
 
     public string GetDeltaFilePath(Folder folder, Files.File file)
     {
+        //todo database
         try
         {
             _logger.CreateSignatureFile(file.RelativePath, file.Id);

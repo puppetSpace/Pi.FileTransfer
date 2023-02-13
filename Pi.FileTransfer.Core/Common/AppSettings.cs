@@ -11,6 +11,8 @@ public class AppSettings
     public string BasePath { get; set; }
 
     public int SizeOfSegmentInBytes { get; set; }
+
+    public string NameOfInstance { get; set; } = "NoNameProvided";
 }
 
 

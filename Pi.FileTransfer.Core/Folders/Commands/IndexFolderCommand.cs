@@ -23,11 +23,20 @@ public class IndexFolderCommand : IRequest<Unit>
             if (Directory.Exists(request.Path))
             {
                 _logger.IndexingFolder(request.Path);
-                var directory = new DirectoryInfo(System.IO.Path.Combine(request.Path, Constants.RootDirectoryName));
-                directory.Create();
-                directory.Attributes |= FileAttributes.Hidden;
+                CreateSyncFolder(request.Path);
+                CreateIncomingFolder(request.Path);
             }
             return Unit.Task;
         }
+
+        private static void CreateSyncFolder(string folderpath)
+        {
+            var directory = new DirectoryInfo(System.IO.Path.Combine(folderpath, Constants.RootDirectoryName));
+            directory.Create();
+            directory.Attributes |= FileAttributes.Hidden;
+        }
+
+        private static void CreateIncomingFolder(string folderPath)
+         => System.IO.Directory.CreateDirectory(FolderUtils.GetIncomingFolderPath(folderPath));
     }
 }
