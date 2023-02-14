@@ -90,7 +90,7 @@ public class DataStore
             _fileSystem.CreateDirectory(path);
 
             var transferFile = Path.Combine(path, $"{file.Id}.failedreceipt");
-            await _fileSystem.WritetoFile(transferFile, new FailedReceipt(file.Id, totalAmountOfSegments, isFileUpdate));
+            await _fileSystem.WritetoFile(transferFile, new FailedReceipt(file.Id,destination, totalAmountOfSegments, isFileUpdate));
         }
         catch (Exception ex)
         {

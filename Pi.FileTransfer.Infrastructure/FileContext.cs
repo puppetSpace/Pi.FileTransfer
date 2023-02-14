@@ -1,10 +1,13 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
-using Pi.FileTransfer.Infrastructure.DbModels;
+using Pi.FileTransfer.Core.Destinations;
+using Pi.FileTransfer.Core.Folders;
+using Pi.FileTransfer.Core.Interfaces;
+using Pi.FileTransfer.Core.Transfers;
 
 namespace Pi.FileTransfer.Infrastructure;
 
-internal class FileContext : DbContext
+internal class FileContext : DbContext, IUnitOfWork
 {
     private readonly IMediator _mediator;
 
@@ -13,9 +16,14 @@ internal class FileContext : DbContext
         _mediator = mediator;
     }
 
+    public DbSet<Folder> Folders { get; set; }
+
     public DbSet<Destination> Destinations { get; set; }
 
-    public DbSet<DbModels.File> Files { get; set; }
+    public DbSet<Core.Files.File> Files { get; set; }
+    public DbSet<FailedReceipt> FailedReceipts{ get; set; }
+    public DbSet<FailedSegment> FailedSegments{ get; set; }
+    public DbSet<LastPosition> LastPositions{ get; set; }
 
 
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
@@ -29,11 +37,76 @@ internal class FileContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder
-            .Entity<Destination>()
-            .HasKey(x => x.Folder);
+            .Entity<Folder>()
+            .HasKey(d => d.Id);
 
         modelBuilder
-            .Entity<DbModels.File>()
-            .HasKey(x => x.Folder);
+            .Entity<Folder>()
+            .HasMany(x => x.Destinations)
+            .WithMany();
+
+        modelBuilder
+            .Entity<Folder>()
+            .HasMany(x => x.Files)
+            .WithOne(x=>x.Folder);
+
+        modelBuilder
+            .Entity<Destination>()
+            .HasKey(x => x.Id);
+
+        modelBuilder
+            .Entity<Core.Files.File>()
+            .HasKey(x => x.Id);
+
+        modelBuilder
+            .Entity<Core.Files.File>()
+            .HasOne(x => x.Folder)
+            .WithMany(x => x.Files);
+        
+        modelBuilder
+            .Entity<FailedReceipt>()
+            .HasKey(x => new { FileId = x.File.Id, DestinationId = x.Destination.Id});
+
+        modelBuilder
+            .Entity<FailedReceipt>()
+            .HasOne(x => x.Destination)
+            .WithMany();
+
+        modelBuilder
+            .Entity<FailedReceipt>()
+            .HasOne(x => x.File)
+            .WithMany();
+
+        modelBuilder
+          .Entity<FailedSegment>()
+          .HasKey(x => new { FileId = x.File.Id, DestinationId = x.Destination.Id });
+
+        modelBuilder
+            .Entity<FailedSegment>()
+            .HasOne(x => x.Destination)
+            .WithMany();
+
+        modelBuilder
+            .Entity<FailedSegment>()
+            .HasOne(x => x.File)
+            .WithMany();
+
+        modelBuilder
+            .Entity<FailedSegment>()
+            .OwnsOne(x => x.Range);
+
+        modelBuilder
+            .Entity<LastPosition>()
+            .HasKey(x => new { FileId =x.File.Id, DestinationId = x.Destination.Id }) ;
+
+        modelBuilder
+            .Entity<LastPosition>()
+            .HasOne(x => x.Destination)
+            .WithMany();
+        modelBuilder
+            .Entity<LastPosition>()
+            .HasOne(x => x.File)
+            .WithMany();
+
     }
 }

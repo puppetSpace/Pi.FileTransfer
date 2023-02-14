@@ -45,13 +45,15 @@ public class AssembleFileCommand : IRequest<Unit>
                 var destination = Path.Combine(request.Folder.FullName, request.TransferReceipt.RelativePath);
                 _fileSystem.MoveFile(tempFile, destination);
 
-                var file = new File(request.TransferReceipt.FileId
+                var file = new File(request.Folder
+                    , request.TransferReceipt.FileId
                     , Path.GetExtension(request.TransferReceipt.RelativePath)
                     , request.TransferReceipt.RelativePath
                     , Path.GetFileName(request.TransferReceipt.RelativePath)
                     , new FileInfo(destination).LastWriteTimeUtc);
                 request.Folder.AddFile(file);
-                await _folderRepository.Save(request.Folder);
+                _folderRepository.Update(request.Folder);
+                await _folderRepository.UnitOfWork.SaveChangesAsync(cancellationToken);
                 _transferStore.DeleteReceivedDataOfFile(request.Folder, request.TransferReceipt.FileId);
             }
             catch (Exception ex)

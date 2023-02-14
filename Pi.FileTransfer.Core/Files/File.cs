@@ -3,32 +3,35 @@
 namespace Pi.FileTransfer.Core.Files;
 public class File
 {
-    public File(string name, string extension, string relativePath, DateTime lastModified)
-        : this(Guid.NewGuid(), name, extension, relativePath, lastModified)
+    public File(Folder folder,string name, string extension, string relativePath, DateTime lastModified)
+        : this(folder,Guid.NewGuid(), name, extension, relativePath, lastModified)
     {
 
     }
 
-    public File(Guid id, string name, string extension, string relativePath, DateTime lastModified)
+    public File(Folder folder,Guid id, string name, string extension, string relativePath, DateTime lastModified)
     {
-        Id = Guid.NewGuid();
+        Folder = folder;
+        Id = id;
         Name = name;
         Extension = extension;
         RelativePath = relativePath;
         LastModified = lastModified;
     }
 
-    public Guid Id { get; private set; }
+    public Guid Id { get;}
 
-    public string Name { get; private set; }
+    public Folder Folder { get; }
 
-    public string Extension { get; private set; }
+    public string Name { get;}
 
-    public string RelativePath { get; private set; }
+    public string Extension { get;}
+
+    public string RelativePath { get;}
 
     public DateTime LastModified { get; private set; }
 
-    public string GetFullPath(Folder folder) => Path.Combine(folder.FullName, RelativePath);
+    public string GetFullPath() => Path.Combine(Folder.FullName, RelativePath);
 
     public void UpdateLastModified(DateTime lastModified) => LastModified = lastModified;
 }

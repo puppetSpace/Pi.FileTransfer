@@ -34,7 +34,8 @@ public class DeleteDestinationFromFolderCommand : IRequest<Unit>
             if (folder is not null)
             {
                 folder.DeleteDestination(request.Destination);
-                await _folderRepository.Save(folder);
+                _folderRepository.Update(folder);
+                await _folderRepository.UnitOfWork.SaveChangesAsync(cancellationToken);
             }
 
             return Unit.Value;

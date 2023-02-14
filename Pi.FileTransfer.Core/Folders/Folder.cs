@@ -11,13 +11,16 @@ public class Folder : EntityBase
     private readonly List<Destination> _destinations;
     private readonly List<Files.File> _files;
 
-    public Folder(string name, string fullName, List<Files.File> files, List<Destination> destinations)
+    public Folder(Guid id,string name, string fullName, List<Files.File> files, List<Destination> destinations)
     {
+        Id = id;
         Name = name;
         _destinations = destinations ?? new List<Destination>();
         _files = files ?? new List<Files.File>();
         FullName = fullName;
     }
+
+    public Guid Id { get; }
 
     public string Name { get; }
 
@@ -88,5 +91,5 @@ public class Folder : EntityBase
         }
     }
 
-    public static Folder Empty { get; } = new Folder("", "", new(), new());
+    public static Folder Empty { get; } = new Folder(Guid.Empty,"", "", new(), new());
 }

@@ -1,14 +1,17 @@
 ﻿namespace Pi.FileTransfer.Core.Destinations;
 public class Destination
 {
-    public Destination(string name, string address)
+    public Destination(Guid id,string name, string address)
     {
+        Id = id;
         Name = name;
         Address = address;
     }
-    public string Name { get; private set; }
 
-    public string Address { get; private set; }
+    public Guid Id { get; }
+    public string Name { get; }
+
+    public string Address { get; }
 
 
 }

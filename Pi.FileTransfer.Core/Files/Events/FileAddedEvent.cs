@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using Pi.FileTransfer.Core;
 using Pi.FileTransfer.Core.Files.Services;
 using Pi.FileTransfer.Core.Folders;
+using Pi.FileTransfer.Core.Interfaces;
 using Pi.FileTransfer.Core.Services;
 using Pi.FileTransfer.Core.Transfers.Services;
 using System.Collections.Concurrent;
@@ -27,9 +28,9 @@ public class FileAddedEvent : INotification
 
         public FileAddedEventhandler(FileSegmentation fileSegmentation
             , TransferService transferService
-            , DataStore transferStore
+            , IFileTransferRepository fileTransferRepository
             , DeltaService deltaService
-            , ILogger<FileAddedEvent> logger) : base(logger, transferService, transferStore, false)
+            , ILogger<FileAddedEvent> logger) : base(logger, transferService, fileTransferRepository, false)
         {
             _fileSegmentation = fileSegmentation;
             _deltaService = deltaService;
@@ -43,9 +44,22 @@ public class FileAddedEvent : INotification
             }
 
             Logger.ProcessNewFile(notification.File.RelativePath);
-            _deltaService.CreateSignature(notification.Folder, notification.File);
-            var totalAmountOfSegments = await _fileSegmentation.Segment(notification.Folder, notification.File, SendSegment);
-            await SendReceipt(notification.Folder, notification.File, totalAmountOfSegments);
+            int totalAmountOfSegments = 0;
+            try
+            {
+                _deltaService.CreateSignature(notification.Folder, notification.File);
+                totalAmountOfSegments = await _fileSegmentation.Segment(notification.Folder, notification.File, SendSegment);
+                await SendReceipt(notification.Folder, notification.File, totalAmountOfSegments);
+            }
+            catch (Exception ex)
+            {
+                Logger.FailedToProcessFile(notification.File.GetFullPath(), ex);
+            }
+            finally
+            {
+                await FileTransferRepository.UnitOfWork.SaveChangesAsync(cancellationToken);
+            }
+
         }
 
         private async Task SendReceipt(Folder folder, File file, int totalAmountOfSegments)
@@ -60,7 +74,7 @@ public class FileAddedEvent : INotification
                 catch (Exception ex)
                 {
                     Logger.SendReceiptFailed(file.RelativePath, destination.Name, ex);
-                    await DataStore.StoreFailedReceiptTransfer(destination, folder, file, totalAmountOfSegments, IsFileUpdate);
+                    FileTransferRepository.AddFailedReceipt(new Transfers.FailedReceipt(file, destination, totalAmountOfSegments, IsFileUpdate));
                 }
             }
         }

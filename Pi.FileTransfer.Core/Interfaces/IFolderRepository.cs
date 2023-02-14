@@ -6,9 +6,10 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace Pi.FileTransfer.Core.Interfaces;
-public interface IFolderRepository
+public interface IFolderRepository : IRepository
 {
-    Task<Folder> GetFolder(string name);
-    IAsyncEnumerable<Folder> GetFolders();
-    Task Save(Folder folder);
+    Task<Folder?> GetFolder(string name);
+    Task<List<Folder>> GetFolders();
+    void Add(Folder folder);
+    void Update(Folder folder);
 }

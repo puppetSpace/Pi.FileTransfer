@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using Pi.FileTransfer.Core;
 using Pi.FileTransfer.Core.Files.Services;
 using Pi.FileTransfer.Core.Folders;
+using Pi.FileTransfer.Core.Interfaces;
 using Pi.FileTransfer.Core.Services;
 using Pi.FileTransfer.Core.Transfers.Services;
 using System;
@@ -30,8 +31,8 @@ public class FileUpdatedEvent : INotification
         private readonly ILogger<FileUpdatedEvent> _logger;
 
         public FileUpdatedEventHandler(DeltaService deltaService, DeltaSegmentation deltaSegmentation
-            , TransferService transferService, DataStore dataStore, ILogger<FileUpdatedEvent> logger)
-            : base(logger, transferService, dataStore, true)
+            , TransferService transferService, IFileTransferRepository fileTransferRepository, ILogger<FileUpdatedEvent> logger)
+            : base(logger, transferService, fileTransferRepository, true)
         {
             _deltaService = deltaService;
             _deltaSegmentation = deltaSegmentation;
@@ -44,17 +45,23 @@ public class FileUpdatedEvent : INotification
                 return;
 
             _logger.ProcessUpdatedFile(notification.File.RelativePath);
-
-            foreach (var destination in notification.Folder.Destinations)
+            try
             {
-                DataStore.ClearLastPosition(destination, notification.Folder, notification.File);
+                await FileTransferRepository.ClearLastPosition(notification.File);
+                await _deltaService.CreateDelta(notification.Folder, notification.File);
+                _deltaService.CreateSignature(notification.Folder, notification.File);
+
+                var totalAmountOfSegments = await _deltaSegmentation.Segment(notification.Folder, notification.File, SendSegment);
+                await SendReceipt(notification.Folder, notification.File, totalAmountOfSegments);
             }
-
-            await _deltaService.CreateDelta(notification.Folder, notification.File);
-            _deltaService.CreateSignature(notification.Folder, notification.File);
-
-            var totalAmountOfSegments = await _deltaSegmentation.Segment(notification.Folder, notification.File, SendSegment);
-            await SendReceipt(notification.Folder, notification.File, totalAmountOfSegments);
+            catch (Exception ex)
+            {
+                Logger.FailedToProcessFile(notification.File.GetFullPath(), ex);
+            }
+            finally
+            {
+                await FileTransferRepository.UnitOfWork.SaveChangesAsync(cancellationToken);
+            }
         }
 
         private async Task SendReceipt(Folder folder, File file, int totalAmountOfSegments)
@@ -69,7 +76,7 @@ public class FileUpdatedEvent : INotification
                 catch (Exception ex)
                 {
                     Logger.SendReceiptFailed(file.RelativePath, destination.Name, ex);
-                    await DataStore.StoreFailedReceiptTransfer(destination, folder, file, totalAmountOfSegments, IsFileUpdate);
+                    FileTransferRepository.AddFailedReceipt( new(file,destination,totalAmountOfSegments, IsFileUpdate));
                 }
             }
         }

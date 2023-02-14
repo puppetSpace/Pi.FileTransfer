@@ -33,7 +33,8 @@ public class AddDestinationToFolderCommand : IRequest<Unit>
             if (folder is not null)
             {
                 folder.AddDestination(request.Destination);
-                await _folderRepository.Save(folder);
+                _folderRepository.Add(folder);
+                await _folderRepository.UnitOfWork.SaveChangesAsync(cancellationToken);
             }
             return Unit.Value;
         }

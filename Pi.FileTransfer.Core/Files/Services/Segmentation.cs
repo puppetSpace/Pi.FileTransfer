@@ -16,14 +16,12 @@ namespace Pi.FileTransfer.Core.Files.Services;
 public abstract class Segmentation
 {
     private readonly IFileSystem _fileSystem;
-    private readonly DataStore _dataStore;
     private readonly ILogger _logger;
     private readonly int _sizeOfSegment;
 
-    public Segmentation(IFileSystem fileSystem, DataStore dataStore, IOptions<AppSettings> options, ILogger logger)
+    public Segmentation(IFileSystem fileSystem, IOptions<AppSettings> options, ILogger logger)
     {
         _fileSystem = fileSystem;
-        _dataStore = dataStore;
         _sizeOfSegment = options.Value.SizeOfSegmentInBytes;
         _logger = logger;
     }
@@ -67,7 +65,7 @@ public abstract class Segmentation
 
     public async Task<string> BuildFile(Folder folder, Guid fileId, IEnumerable<byte[]> bytes)
     {
-        var filePath = _dataStore.GetIncomingTempFilePath(folder, fileId.ToString());
+        var filePath = FolderUtils.GetIncomingFolderTempPath(folder.FullName, fileId.ToString());
 
         _logger.BuildFileInTemp(filePath, bytes.Count());
 

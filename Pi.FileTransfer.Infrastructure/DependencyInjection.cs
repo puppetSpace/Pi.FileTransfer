@@ -25,6 +25,7 @@ public static class DependencyInjection
             }, ServiceLifetime.Transient);
 
         services.AddTransient<IFolderRepository, FolderRepository>();
+        services.AddTransient<IFileTransferRepository, FileTransferRepository>();
         services.AddTransient<IFileSystem, FileSystem>();
     }
 

@@ -27,7 +27,7 @@ public class DeltaService
     public void CreateSignature(Folder folder, File file)
     {
         _logger.CreateSignature(file.RelativePath);
-        using var fs = _fileSystem.GetReadFileStream(file.GetFullPath(folder));
+        using var fs = _fileSystem.GetReadFileStream(file.GetFullPath());
         var signatureBuilder = new SignatureBuilder();
         using var writeStream = _fileSystem.GetWriteFileStream(FolderUtils.GetSignaturesFolderPath(folder.FullName,file.Id.ToString()));
         var signatureWriter = new SignatureWriter(writeStream);
@@ -42,11 +42,11 @@ public class DeltaService
         var signatureFile = FolderUtils.GetSignaturesFolderPath(file.Id.ToString());
         if (!_fileSystem.FileExist(signatureFile))
         {
-            _logger?.NoSignatureForFilePresent(file.GetFullPath(folder));
+            _logger?.NoSignatureForFilePresent(file.GetFullPath());
         }
         else
         {
-            using var fs = _fileSystem.GetReadFileStream(file.GetFullPath(folder));
+            using var fs = _fileSystem.GetReadFileStream(file.GetFullPath());
             using var deltaStream = _fileSystem.GetWriteFileStream(FolderUtils.GetDeltasFolderPath(folder.FullName, file.Id.ToString()));
             using var signatureStream = new MemoryStream(await _fileSystem.GetRawContentOfFile(signatureFile));
             var signatureReader = new SignatureReader(signatureStream, new LogProgressReporter(_logger));

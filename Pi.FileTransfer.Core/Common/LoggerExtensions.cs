@@ -96,6 +96,18 @@ public static partial class LoggerExtensionsAddFileCommand
     Level = LogLevel.Error,
     Message = "Failed to send receipt of file '{File}' to '{Destination}'")]
     public static partial void SendReceiptFailed(this ILogger logger, string file, string destination, Exception exception);
+
+    [LoggerMessage(
+    EventId = 7,
+    Level = LogLevel.Error,
+    Message = "Failed to process file '{File}'")]
+    public static partial void FailedToProcessFile(this ILogger logger, string file,Exception exception);
+
+    [LoggerMessage(
+    EventId = 8,
+    Level = LogLevel.Error,
+    Message = "Failed to process file for retry '{File}' to '{Destination}'")]
+    public static partial void FailedToRetryProcessOfFile(this ILogger logger, string file, string destination , Exception exception);
 }
 
 public static partial class LoggerExtensionsAssembleFileCommand
