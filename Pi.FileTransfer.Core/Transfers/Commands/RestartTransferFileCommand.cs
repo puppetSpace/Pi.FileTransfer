@@ -12,18 +12,19 @@ using Pi.FileTransfer.Core.Transfers.Services;
 namespace Pi.FileTransfer.Core.Transfers.Commands;
 public class RestartTransferFileCommand : IRequest<Unit>
 {
-    public RestartTransferFileCommand(Files.File file, Folder folder, Destination destination)
+    public RestartTransferFileCommand(Files.File file, Folder folder, Destination destination, int readBytes)
     {
         File = file;
         Folder = folder;
         Destination = destination;
+        ReadBytes = readBytes;
     }
 
     public Files.File File { get; }
 
     public Folder Folder { get; }
     public Destination Destination { get; }
-
+    public int ReadBytes { get; }
 
     private class RestartTransferFileCommandHandler : FileHandlingBase, IRequestHandler<RestartTransferFileCommand, Unit>
     {
@@ -34,19 +35,16 @@ public class RestartTransferFileCommand : IRequest<Unit>
             _fileSegmentation = fileSegmentation;
         }
 
-        //todo logging
         public async Task<Unit> Handle(RestartTransferFileCommand request, CancellationToken cancellationToken)
         {
             try
             {
-                var lastPosition = await FileTransferRepository.GetLastPosition(request.File, request.Destination);
-
                 async Task SendSegmentForDestination(int sequenceNumber, byte[] buffer, Folder folder, Files.File file)
                 {
-                    await SendToDestination(sequenceNumber, buffer, folder, file, request.Destination);
+                    await SendToDestination(sequenceNumber, buffer, file, request.Destination);
                 }
 
-                var totalAmountOfSegments = await _fileSegmentation.Segment(request.Folder, request.File, lastPosition.ReadBytes, SendSegmentForDestination);
+                var totalAmountOfSegments = await _fileSegmentation.Segment(request.Folder, request.File, request.ReadBytes, SendSegmentForDestination);
                 await SendReceipt(request.Destination, request.Folder, request.File, totalAmountOfSegments);
                 await FileTransferRepository.ClearLastPosition(request.File, request.Destination);
             }
@@ -67,7 +65,7 @@ public class RestartTransferFileCommand : IRequest<Unit>
             try
             {
                 Logger.SendReceipt(file.RelativePath, destination.Name);
-                await TransferService.SendReceipt(destination, new(file.Id, file.RelativePath, totalAmountOfSegments, folder.Name, IsFileUpdate));
+                await TransferService.SendReceipt(destination, new(file.Id, folder.Name, file.RelativePath, totalAmountOfSegments, IsFileUpdate));
             }
             catch (Exception ex)
             {

@@ -47,10 +47,11 @@ public class IndexerService : BackgroundService
     private async Task IndexFiles()
     {
         _logger.IndexingFiles();
-        await foreach (var folder in _folderRepository.GetFolders())
+        foreach (var folder in await _folderRepository.GetFolders())
         {
             await _mediator.Send(new IndexFilesCommand(folder));
-            await _folderRepository.Save(folder);
+            _folderRepository.Update(folder);
         }
+        await _folderRepository.UnitOfWork.SaveChangesAsync();
     }
 }

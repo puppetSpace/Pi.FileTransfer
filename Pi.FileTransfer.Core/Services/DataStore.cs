@@ -6,157 +6,36 @@ using Pi.FileTransfer.Core.Destinations;
 using Pi.FileTransfer.Core.Folders;
 using Pi.FileTransfer.Core.Folders.Commands;
 using Pi.FileTransfer.Core.Interfaces;
-using Pi.FileTransfer.Core.Transfers;
+using Pi.FileTransfer.Core.Receives;
 
 namespace Pi.FileTransfer.Core.Services;
-public class DataStore
+internal class DataStore
 {
     private readonly IOptions<AppSettings> _options;
+    private readonly FolderState _folderState;
     private readonly IFileSystem _fileSystem;
     private readonly IMediator _mediator;
     private readonly ILogger<DataStore> _logger;
 
-    public DataStore(IOptions<AppSettings> options, IFileSystem fileSystem, IMediator mediator, ILogger<DataStore> logger)
+    public DataStore(IOptions<AppSettings> options, FolderState folderState, IFileSystem fileSystem, IMediator mediator, ILogger<DataStore> logger)
     {
         _options = options;
+        _folderState = folderState;
         _fileSystem = fileSystem;
         _mediator = mediator;
         _logger = logger;
     }
 
-    public async Task StoreLastPosition(Destination destination, Folder folder, Files.File file, int lastPosition)
-    {
-        //todo save in database
-        try
-        {
-            _logger.StoreLastPosition(lastPosition, file.RelativePath, destination.Name);
-            var path = Path.Combine(folder.FullName, Constants.RootDirectoryName, "Data", "Outgoing", destination.Name);
-            _fileSystem.CreateDirectory(path);
 
-            var transferFile = Path.Combine(path, file.Id.ToString());
-            await _fileSystem.WritetoFile(transferFile, lastPosition);
-        }
-        catch (Exception ex)
-        {
-            _logger.FailedToStoreLastPosition(lastPosition, file.RelativePath, destination.Name, ex);
-        }
-    }
-
-    public async Task<int?> GetLastPosition(Folder folder, Destination destination, Guid fileId)
-    {
-        //todo get from database
-        try
-        {
-            var path = Path.Combine(folder.FullName, Constants.RootDirectoryName, "Data", "Outgoing", destination.Name);
-            _fileSystem.CreateDirectory(path);
-
-            var transferFile = Path.Combine(path, fileId.ToString());
-            if (!System.IO.File.Exists(transferFile))
-                return null;
-
-            return await _fileSystem.GetContentOfFile<int>(transferFile);
-        }
-        catch
-        {
-            return null;
-        }
-    }
-
-    public async Task StoreFailedSegmentTransfer(Destination destination, Folder folder, Files.File file, int sequencenumber, SegmentRange range, bool isFileUpdate)
-    {
-        //todo save in database
-        try
-        {
-            _logger.StoreFailedSegment(sequencenumber, file.RelativePath, destination.Name);
-            var path = Path.Combine(folder.FullName, Constants.RootDirectoryName, "Data", "Outgoing", destination.Name, "Failed");
-            _fileSystem.CreateDirectory(path);
-
-            var transferFile = Path.Combine(path, $"{sequencenumber}_{file.Id}.failedsegment");
-            await _fileSystem.WritetoFile(transferFile, new FailedSegment(file.Id, sequencenumber, range, isFileUpdate));
-        }
-        catch (Exception ex)
-        {
-            _logger.FailedToStoreFailedSegment(sequencenumber, file.RelativePath, destination.Name, ex);
-        }
-    }
-
-    public async Task StoreFailedReceiptTransfer(Destination destination, Folder folder, Files.File file, int totalAmountOfSegments, bool isFileUpdate)
-    {
-        //todo save in database
-        try
-        {
-            _logger.StoreFailedReceipt(file.RelativePath, destination.Name);
-            var path = Path.Combine(folder.FullName, Constants.RootDirectoryName, "Data", "Outgoing", destination.Name, "Failed");
-            _fileSystem.CreateDirectory(path);
-
-            var transferFile = Path.Combine(path, $"{file.Id}.failedreceipt");
-            await _fileSystem.WritetoFile(transferFile, new FailedReceipt(file.Id,destination, totalAmountOfSegments, isFileUpdate));
-        }
-        catch (Exception ex)
-        {
-            _logger.FailedToStoreFailedReceipt(file.RelativePath, destination.Name, ex);
-        }
-    }
-
-    public async IAsyncEnumerable<FailedSegment> GetFailedSegments(Folder folder, Destination destination)
-    {
-        //todo get from database
-        var path = Path.Combine(folder.FullName, Constants.RootDirectoryName, "Data", "Outgoing", destination.Name, "Failed");
-        if (Directory.Exists(path))
-        {
-            var failedSegments = _fileSystem.GetFiles(path, "*.failedsegment").ToList();
-            _logger.GetFailedSegments(failedSegments.Count, folder.Name, destination.Name);
-            foreach (var file in failedSegments)
-            {
-                FailedSegment? content = null;
-                try
-                {
-                    content = await _fileSystem.GetContentOfFile<FailedSegment>(file);
-                }
-                catch (Exception ex)
-                {
-                    _logger.FailedToGetContentOfFailedSegment(file, ex);
-                }
-                if (content is not null)
-                    yield return content;
-            }
-        }
-
-    }
-
-    public async IAsyncEnumerable<FailedReceipt> GetFailedReceipts(Folder folder, Destination destination)
-    {
-        //todo get from database
-        var path = Path.Combine(folder.FullName, Constants.RootDirectoryName, "Data", "Outgoing", destination.Name, "Failed");
-        if (Directory.Exists(path))
-        {
-            var failedReceipts = _fileSystem.GetFiles(path, "*.failedreceipt").ToList();
-            _logger.GetFailedReceipts(failedReceipts.Count, folder.Name, destination.Name);
-            foreach (var file in failedReceipts)
-            {
-                FailedReceipt? content = null;
-                try
-                {
-                    content = await _fileSystem.GetContentOfFile<FailedReceipt>(file);
-                }
-                catch (Exception ex)
-                {
-                    _logger.FailedToGetContentOfFailedReceipt(file, ex);
-                }
-                if (content is not null)
-                    yield return content;
-            }
-        }
-
-    }
-
-    public async Task StoreReceivedSegment(TransferSegment transferSegment)
+    public async Task StoreReceivedSegment(Segment transferSegment)
     {
         try
         {
             _logger.StoreReceivedSegment(transferSegment.Sequencenumber, transferSegment.FileId, transferSegment.FolderName);
+
             var folder = Path.Combine(_options.Value.BasePath, transferSegment.FolderName);
-            await _mediator.Send(new IndexFolderCommand(folder));
+            if(!_folderState.Exists(folder))
+                await _mediator.Send(new IndexFolderCommand(folder));
 
             var incomingDataFolder = FolderUtils.GetIncomingFolderPath(folder, transferSegment.FileId.ToString());
             _fileSystem.CreateDirectory(incomingDataFolder);
@@ -171,29 +50,7 @@ public class DataStore
         }
     }
 
-    public async Task StoreReceivedReceipt(TransferReceipt transferReceipt)
-    {
-        //todo save in database
-        try
-        {
-            _logger.StoreReceivedReceipt(transferReceipt.RelativePath, transferReceipt.FolderName);
-            var folder = Path.Combine(_options.Value.BasePath, transferReceipt.FolderName);
-            await _mediator.Send(new IndexFolderCommand(folder));
-
-            var incomingDataFolder = Path.Combine(folder, Constants.RootDirectoryName, "Data", "Incoming", transferReceipt.FileId.ToString());
-            _fileSystem.CreateDirectory(incomingDataFolder);
-
-            var receiptPath = Path.Combine(incomingDataFolder, $"{transferReceipt.FileId}.receipt");
-
-            await _fileSystem.WritetoFile(receiptPath, transferReceipt); ;
-        }
-        catch (Exception ex)
-        {
-            _logger.FailedToStoreReceivedReceipt(transferReceipt.RelativePath, transferReceipt.FolderName, ex);
-        }
-    }
-
-    public async IAsyncEnumerable<TransferSegment> GetReceivedSegmentsForFile(Folder folder, Guid fileId)
+    public async IAsyncEnumerable<Segment> GetReceivedSegmentsForFile(Folder folder, Guid fileId)
     {
         var incomingDataFolder = FolderUtils.GetIncomingFolderPath(folder.FullName, fileId.ToString());
         if (Directory.Exists(incomingDataFolder))
@@ -202,10 +59,10 @@ public class DataStore
             _logger.GetReceivedSegments(segmentFiles.Count, fileId, folder.Name);
             foreach (var file in segmentFiles)
             {
-                TransferSegment? content = null;
+                Segment? content = null;
                 try
                 {
-                    content = await _fileSystem.GetContentOfFile<TransferSegment>(file);
+                    content = await _fileSystem.GetContentOfFile<Segment>(file);
                 }
                 catch (Exception ex)
                 {
@@ -216,57 +73,6 @@ public class DataStore
                     yield return content!;
             }
         }
-    }
-
-    public int GetReceivedSegmentsCount(Folder folder)
-    {
-        var incomingDataFolder = FolderUtils.GetIncomingFolderPath(folder.FullName);
-        if (Directory.Exists(incomingDataFolder))
-        {
-            var segmentFiles = _fileSystem.GetFiles(incomingDataFolder, "*.segment", true).ToList();
-            return segmentFiles.Count;
-        }
-
-        return 0;
-    }
-
-
-    public async IAsyncEnumerable<TransferReceipt> GetReceivedReceipts(Folder folder)
-    {
-        //totdo get from database
-        var incomingDataFolder = Path.Combine(folder.FullName, Constants.RootDirectoryName, "Data", "Incoming");
-        if (Directory.Exists(incomingDataFolder))
-        {
-            var receiptFiles = _fileSystem.GetFiles(incomingDataFolder, "*.receipt", true).ToList();
-            _logger.GetReceivedReceipts(receiptFiles.Count, folder.Name);
-            foreach (var file in receiptFiles)
-            {
-                TransferReceipt? content = null;
-                try
-                {
-                    content = await _fileSystem.GetContentOfFile<TransferReceipt>(file);
-                }
-                catch (Exception ex)
-                {
-                    _logger.FailedToGetContentOfReceipt(file, ex);
-                }
-                if (content is not null)
-                    yield return content!;
-            }
-        }
-    }
-
-    public int GetReceivedReceiptsCount(Folder folder)
-    {
-        //todo get from database
-        var incomingDataFolder = Path.Combine(folder.FullName, Constants.RootDirectoryName, "Data", "Incoming");
-        if (Directory.Exists(incomingDataFolder))
-        {
-            var receiptFiles = _fileSystem.GetFiles(incomingDataFolder, "*.receipt", true).ToList();
-            return receiptFiles.Count;
-        }
-
-        return 0;
     }
 
     public void DeleteFailedItemsOfFile(Destination destination, Folder folder, Guid fileId)
@@ -291,44 +97,6 @@ public class DataStore
         }
     }
 
-    public void DeleteFailedSegment(Destination destination, Folder folder, FailedSegment failedSegment)
-    {
-        //todo database
-        try
-        {
-            var path = Path.Combine(folder.FullName, Constants.RootDirectoryName, "Data", "Outgoing", destination.Name, "Failed");
-            if (Directory.Exists(path))
-            {
-                var segmentFile = Path.Combine(path, $"{failedSegment.Sequencenumber}_{failedSegment.FileId}.failedsegment");
-                _logger.DeleteFailedSegment(segmentFile, destination.Name);
-                _fileSystem.DeleteFile(segmentFile);
-            }
-        }
-        catch (Exception ex)
-        {
-            _logger.FailedToDeleteFailedSegment(failedSegment.Sequencenumber, failedSegment.FileId, folder.Name, destination.Name, ex);
-        }
-    }
-
-    public void DeleteFailedReceipt(Destination destination, Folder folder, FailedReceipt failedReceipt)
-    {
-        //todo database
-        try
-        {
-            var path = Path.Combine(folder.FullName, Constants.RootDirectoryName, "Data", "Outgoing", destination.Name, "Failed");
-            if (Directory.Exists(path))
-            {
-                var receiptFile = Path.Combine(path, $"{failedReceipt.FileId}.failedreceipt");
-                _logger.DeleteFailedReceipt(receiptFile, destination.Name);
-                _fileSystem.DeleteFile(receiptFile);
-            }
-        }
-        catch (Exception ex)
-        {
-            _logger.FailedToDeleteFailedReceipt(failedReceipt.FileId, folder.Name, destination.Name, ex);
-        }
-    }
-
     public void DeleteReceivedDataOfFile(Folder folder, Guid fileId)
     {
         try
@@ -340,22 +108,6 @@ public class DataStore
         catch (Exception ex)
         {
             _logger.FailedToDeleteReceivedData(folder.Name, fileId, ex);
-        }
-    }
-
-    public void ClearLastPosition(Destination destination, Folder folder, Files.File file)
-    {
-        //todo database
-        try
-        {
-            _logger.ClearLastPosition(file.RelativePath, destination.Name);
-            var path = Path.Combine(folder.FullName, Constants.RootDirectoryName, "Data", "Outgoing", destination.Name);
-            var transferFile = Path.Combine(path, file.Id.ToString());
-            _fileSystem.DeleteFile(transferFile);
-        }
-        catch (Exception ex)
-        {
-            _logger.FailedToClearLastPosition(file.RelativePath, destination.Name, ex);
         }
     }
 }

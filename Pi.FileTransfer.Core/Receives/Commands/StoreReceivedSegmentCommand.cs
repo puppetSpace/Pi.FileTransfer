@@ -1,17 +1,17 @@
 ﻿using MediatR;
 using Pi.FileTransfer.Core.Services;
 
-namespace Pi.FileTransfer.Core.Transfers.Commands;
+namespace Pi.FileTransfer.Core.Receives.Commands;
 public class StoreReceivedSegmentCommand : IRequest<Unit>
 {
-    public StoreReceivedSegmentCommand(TransferSegment transferSegment)
+    public StoreReceivedSegmentCommand(Segment transferSegment)
     {
         TransferSegment = transferSegment;
     }
 
-    public TransferSegment TransferSegment { get; }
+    public Segment TransferSegment { get; }
 
-    public class StoreReceivedSegmentCommandHandler : IRequestHandler<StoreReceivedSegmentCommand, Unit>
+    internal class StoreReceivedSegmentCommandHandler : IRequestHandler<StoreReceivedSegmentCommand, Unit>
     {
         private readonly DataStore _dataStore;
 

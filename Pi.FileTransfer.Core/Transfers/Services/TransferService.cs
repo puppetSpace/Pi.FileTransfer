@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using Pi.FileTransfer.Core.Destinations;
+using Pi.FileTransfer.Core.Receives;
 using Pi.FileTransfer.Core.Transfers.Exceptions;
 using System.Net.Http.Json;
 
@@ -16,7 +17,7 @@ public class TransferService
         _logger = logger;
     }
 
-    public async Task Send(Destination destination, TransferSegment data)
+    public async Task Send(Destination destination, Segment data)
     {
         _logger.SendSegment(data.Sequencenumber, data.FileId, data.FolderName, destination.Address);
         var client = _clientFactory.CreateClient(HttpClientName);
@@ -28,9 +29,9 @@ public class TransferService
         }
     }
 
-    public async Task SendReceipt(Destination destination, TransferReceipt transferReceipt)
+    public async Task SendReceipt(Destination destination, Receipt transferReceipt)
     {
-        _logger.SendReceipt(transferReceipt.RelativePath, transferReceipt.FolderName, destination.Address);
+        _logger.SendReceipt(transferReceipt.RelativePath, destination.Address);
         var client = _clientFactory.CreateClient(HttpClientName);
         var response = await client.PostAsJsonAsync($"{destination.Address}/api/file/receipt", transferReceipt);
         if (!response.IsSuccessStatusCode)

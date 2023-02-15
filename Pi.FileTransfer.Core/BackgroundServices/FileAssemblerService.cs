@@ -6,17 +6,19 @@ using Pi.FileTransfer.Core.Interfaces;
 using Pi.FileTransfer.Core.Services;
 
 namespace Pi.FileTransfer.Core.BackgroundServices;
-public class FileAssemblerService : BackgroundService
+internal class FileAssemblerService : BackgroundService
 {
     private readonly IFolderRepository _folderRepository;
-    private readonly DataStore _transferStore;
+    private readonly IFileReceiveRepository _fileReceiveRepository;
+    private readonly DataStore _dataStore;
     private readonly IMediator _mediator;
     private readonly ILogger<FileAssemblerService> _logger;
 
-    public FileAssemblerService(IFolderRepository folderRepository, DataStore transferStore, IMediator mediator, ILogger<FileAssemblerService> logger)
+    public FileAssemblerService(IFolderRepository folderRepository,IFileReceiveRepository fileReceiveRepository, DataStore dataStore, IMediator mediator, ILogger<FileAssemblerService> logger)
     {
         _folderRepository = folderRepository;
-        _transferStore = transferStore;
+        _fileReceiveRepository = fileReceiveRepository;
+        _dataStore = dataStore;
         _mediator = mediator;
         _logger = logger;
     }
@@ -25,12 +27,12 @@ public class FileAssemblerService : BackgroundService
     {
         while (!stoppingToken.IsCancellationRequested)
         {
-            await foreach (var folder in _folderRepository.GetFolders())
+            foreach (var folder in await _folderRepository.GetFolders())
             {
                 _logger.SearchReceiptInFolder(folder.FullName);
-                await foreach (var receipt in _transferStore.GetReceivedReceipts(folder))
+                foreach (var receipt in await _fileReceiveRepository.GetReceipts(folder.Name))
                 {
-                    var files = (await _transferStore.GetReceivedSegmentsForFile(folder, receipt.FileId).ToListAsync(cancellationToken: stoppingToken));
+                    var files = (await _dataStore.GetReceivedSegmentsForFile(folder, receipt.FileId).ToListAsync(cancellationToken: stoppingToken));
                     _logger.AmountOfSegmentFilesPresent(receipt.RelativePath, receipt.AmountOfSegments, files.Count);
                     if (receipt.AmountOfSegments == files.Count)
                     {

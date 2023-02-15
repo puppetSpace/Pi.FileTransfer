@@ -31,20 +31,21 @@ public abstract class FileHandlingBase
         var runningTasks = new List<Task>();
         foreach (var destination in folder.Destinations)
         {
-            runningTasks.Add(SendToDestination(sequenceNumber, buffer, folder, file, destination));
+            runningTasks.Add(SendToDestination(sequenceNumber, buffer, file, destination));
         }
 
         await Task.WhenAll(runningTasks);
-        await FileTransferRepository.ClearLastPosition(file);
+        foreach(var destination in folder.Destinations)
+            await FileTransferRepository.ClearLastPosition(file,destination);
     }
 
-    protected async Task SendToDestination(int sequenceNumber, byte[] buffer, Folder folder, File file, Destination destination)
+    protected async Task SendToDestination(int sequenceNumber, byte[] buffer, File file, Destination destination)
     {
         var readBytes = CurrentBytesRead.TryGetValue(destination.Name, out var currentBytesRead) ? currentBytesRead + buffer.Length : buffer.Length;
         try
         {
             Logger.SendSegment(file.RelativePath, destination.Name);
-            await TransferService.Send(destination, new(sequenceNumber, buffer, file.Id, folder.Name));
+            await TransferService.Send(destination, new(sequenceNumber, buffer, file.Id, file.Folder.Name));
         }
         catch (Exception ex)
         {

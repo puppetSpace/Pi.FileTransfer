@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Pi.FileTransfer.Core.Destinations;
 using Pi.FileTransfer.Core.Folders;
 using Pi.FileTransfer.Core.Interfaces;
+using Pi.FileTransfer.Core.Receives;
 using Pi.FileTransfer.Core.Transfers;
 
 namespace Pi.FileTransfer.Infrastructure;
@@ -24,6 +25,8 @@ internal class FileContext : DbContext, IUnitOfWork
     public DbSet<FailedReceipt> FailedReceipts{ get; set; }
     public DbSet<FailedSegment> FailedSegments{ get; set; }
     public DbSet<LastPosition> LastPositions{ get; set; }
+
+    public DbSet<Receipt> Receipts { get; set; }
 
 
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)

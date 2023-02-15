@@ -3,25 +3,25 @@ using Microsoft.Extensions.Logging;
 using Pi.FileTransfer.Core.Files.Services;
 using Pi.FileTransfer.Core.Folders;
 using Pi.FileTransfer.Core.Interfaces;
+using Pi.FileTransfer.Core.Receives;
 using Pi.FileTransfer.Core.Services;
-using Pi.FileTransfer.Core.Transfers;
 
 namespace Pi.FileTransfer.Core.Files.Commands;
 public class AssembleFileCommand : IRequest<Unit>
 {
 
-    public AssembleFileCommand(Folder folder, TransferReceipt transferReceipt, IEnumerable<TransferSegment> transferSegments)
+    public AssembleFileCommand(Folder folder, Receipt transferReceipt, IEnumerable<Segment> transferSegments)
     {
         TransferReceipt = transferReceipt;
         Folder = folder;
         TransferSegments = transferSegments;
     }
 
-    public TransferReceipt TransferReceipt { get; }
+    public Receipt TransferReceipt { get; }
     public Folder Folder { get; }
-    public IEnumerable<TransferSegment> TransferSegments { get; }
+    public IEnumerable<Segment> TransferSegments { get; }
 
-    public class AssembleFileCommandHandler : AssembleCommandHandlerBase, IRequestHandler<AssembleFileCommand>
+    internal class AssembleFileCommandHandler : AssembleCommandHandlerBase, IRequestHandler<AssembleFileCommand>
     {
         private readonly DataStore _transferStore;
         private readonly IFileSystem _fileSystem;

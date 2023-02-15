@@ -5,6 +5,7 @@ using Microsoft.Extensions.Options;
 using Pi.FileTransfer.Core.BackgroundServices;
 using Pi.FileTransfer.Core.Common;
 using Pi.FileTransfer.Core.Files.Services;
+using Pi.FileTransfer.Core.Interfaces;
 using Pi.FileTransfer.Core.Services;
 using Pi.FileTransfer.Core.Transfers.Services;
 using System.Reflection;
@@ -20,8 +21,13 @@ public static class DependencyInjection
         services.AddTransient<FileSegmentation>();
         services.AddTransient<DeltaSegmentation>();
         services.AddTransient<TransferService>();
-        services.AddTransient<DataStore>();
         services.AddTransient<DeltaService>();
+        services.AddTransient<DataStore>();
+        services.AddSingleton<FolderState>(x =>
+        {
+            var folderRepository = x.GetRequiredService<IFolderRepository>();
+            return new FolderState( folderRepository.GetFolders().GetAwaiter().GetResult());
+        });
         services.AddHttpClient(TransferService.HttpClientName, o =>
         {
             o.Timeout = TimeSpan.FromSeconds(5);

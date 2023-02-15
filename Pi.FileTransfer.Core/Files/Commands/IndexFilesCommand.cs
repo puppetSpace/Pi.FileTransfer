@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Logging;
 using Pi.FileTransfer.Core.Folders;
 using Pi.FileTransfer.Core.Interfaces;
+using System.IO;
 
 namespace Pi.FileTransfer.Core.Files.Commands;
 public class IndexFilesCommand : IRequest<Unit>
@@ -35,9 +36,9 @@ public class IndexFilesCommand : IRequest<Unit>
                 var existingFiles = request.Folder.Files;
                 var currentFiles = _fileSystem.GetFiles(request.Folder);
 
-                var toDelete = existingFiles.Where(x => !currentFiles.Any(y => x.GetFullPath(request.Folder) == y.file)).ToList();
-                var toAdd = currentFiles.Where(x => !existingFiles.Any(y => x.file == y.GetFullPath(request.Folder))).ToList();
-                var toUpdate = currentFiles.Where(x => existingFiles.Any(y => y.GetFullPath(request.Folder) == x.file && y.LastModified != x.lastModified)).ToList();
+                var toDelete = existingFiles.Where(x => !currentFiles.Any(y => x.GetFullPath() == y.file)).ToList();
+                var toAdd = currentFiles.Where(x => !existingFiles.Any(y => x.file == y.GetFullPath())).ToList();
+                var toUpdate = currentFiles.Where(x => existingFiles.Any(y => y.GetFullPath() == x.file && y.LastModified != x.lastModified)).ToList();
 
                 foreach (var file in toDelete)
                 {
@@ -48,7 +49,12 @@ public class IndexFilesCommand : IRequest<Unit>
                 foreach (var file in toAdd)
                 {
                     _logger.AddFileToIndex(file.file, request.Folder.Name);
-                    request.Folder.AddFile(file.file, file.lastModified);
+                    var buildFile = new Core.Files.File(request.Folder, Path.GetFileNameWithoutExtension(file.file)
+                        , Path.GetExtension(file.file)
+                        , file.file.Replace($"{request.Folder.FullName}{Path.DirectorySeparatorChar}", "")
+                        , file.lastModified);
+
+                    request.Folder.AddFile(buildFile);
                 }
 
                 foreach (var file in toUpdate)

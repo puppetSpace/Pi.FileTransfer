@@ -34,7 +34,7 @@ public abstract class Segmentation
 
     public async Task<int> Segment(Folder folder, File file, int startPosition, Func<int, byte[], Folder, File, Task> segmentCreatedFunc)
     {
-        using var fs = GetStream(folder, file);
+        using var fs = GetStream(file);
         var buffer = ArrayPool<byte>.Shared.Rent(_sizeOfSegment);
         int bytesRead = startPosition;
         //todo test
@@ -49,12 +49,12 @@ public abstract class Segmentation
         return segmentcount;
     }
 
-    public async Task<byte[]> GetSpecificSegment(Folder folder, File file, SegmentRange range)
+    public async Task<byte[]> GetSpecificSegment(File file, SegmentRange range)
     {
-        _logger.GetSpecificSegment(file.RelativePath, range.Start, range.End);
+        _logger.GetSpecificSegment(file.GetFullPath(), range.Start, range.End);
         var buffer = ArrayPool<byte>.Shared.Rent(_sizeOfSegment);
 
-        using var fs = GetStream(folder, file);
+        using var fs = GetStream(file);
         fs.Seek(range.Start, SeekOrigin.Begin);
         var memory = buffer.AsMemory(0, range.Length);
         await fs.ReadAsync(memory);
@@ -76,6 +76,6 @@ public abstract class Segmentation
         return filePath;
     }
 
-    protected abstract Stream GetStream(Folder folder, File file);
+    protected abstract Stream GetStream(File file);
 
 }

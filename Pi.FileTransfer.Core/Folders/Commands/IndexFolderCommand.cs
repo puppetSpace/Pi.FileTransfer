@@ -18,21 +18,26 @@ public class IndexFolderCommand : IRequest<Unit>
         private readonly ILogger<IndexFolderCommand> _logger;
         private readonly IOptions<AppSettings> _options;
         private readonly IFolderRepository _folderRepository;
+        private readonly IFileSystem _fileSystem;
 
-        public IndexFolderCommandHandler(ILogger<IndexFolderCommand> logger, IOptions<AppSettings> options, IFolderRepository folderRepository)
+        public IndexFolderCommandHandler(ILogger<IndexFolderCommand> logger, IOptions<AppSettings> options, IFolderRepository folderRepository, IFileSystem fileSystem)
         {
             _logger = logger;
             _options = options;
             _folderRepository = folderRepository;
+            _fileSystem = fileSystem;
         }
 
         public async Task<Unit> Handle(IndexFolderCommand request, CancellationToken cancellationToken)
         {
-            if (Directory.Exists(request.Path))
+            _fileSystem.CreateDirectory(request.Path);
+
+            var folderName = System.IO.Path.GetFileName(request.Path);
+            var folder = await _folderRepository.GetFolder(folderName);
+            if (folder is null)
             {
                 _logger.IndexingFolder(request.Path);
 
-                var folderName = System.IO.Path.GetFileName(request.Path);
                 _folderRepository.Add(new Folder(Guid.NewGuid(), folderName, System.IO.Path.Combine(_options.Value.BasePath, folderName), new List<Core.Files.File>(), new List<Destination>()));
                 CreateSyncFolder(request.Path);
                 CreateIncomingFolder(request.Path);
@@ -51,16 +56,16 @@ public class IndexFolderCommand : IRequest<Unit>
             directory.Attributes |= FileAttributes.Hidden;
         }
 
-        private static void CreateIncomingFolder(string folderPath)
-            => System.IO.Directory.CreateDirectory(FolderUtils.GetIncomingFolderPath(folderPath));
+        private void CreateIncomingFolder(string folderPath)
+            => _fileSystem.CreateDirectory(FolderUtils.GetIncomingFolderPath(folderPath));
 
-        private static void CreateIncomingTempFolder(string folderPath)
-            => System.IO.Directory.CreateDirectory(FolderUtils.GetIncomingFolderTempPath(folderPath));
+        private void CreateIncomingTempFolder(string folderPath)
+            => _fileSystem.CreateDirectory(FolderUtils.GetIncomingFolderTempPath(folderPath));
 
-        private static void CreateDeltaFolderFolder(string folderPath)
-            => System.IO.Directory.CreateDirectory(FolderUtils.GetDeltasFolderPath(folderPath));
+        private void CreateDeltaFolderFolder(string folderPath) 
+            => _fileSystem.CreateDirectory(FolderUtils.GetDeltasFolderPath(folderPath));
 
-        private static void CreateSignatureFolder(string folderPath)
-            => System.IO.Directory.CreateDirectory(FolderUtils.GetSignaturesFolderPath(folderPath));
+        private void CreateSignatureFolder(string folderPath) 
+            => _fileSystem.CreateDirectory(FolderUtils.GetSignaturesFolderPath(folderPath));
     }
 }

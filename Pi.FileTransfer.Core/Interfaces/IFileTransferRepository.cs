@@ -1,4 +1,5 @@
 ﻿using Pi.FileTransfer.Core.Destinations;
+using Pi.FileTransfer.Core.Folders;
 using Pi.FileTransfer.Core.Transfers;
 using System;
 using System.Collections.Generic;
@@ -13,5 +14,9 @@ public interface IFileTransferRepository : IRepository
     void AddFailedSegment(FailedSegment failedSegment);
     Task AddOrUpdateLastPosition(LastPosition lastPosition);
     Task ClearLastPosition(Core.Files.File file, Destination destination);
-    Task<LastPosition> GetLastPosition(Files.File file, Destination destination);
+    Task<List<FailedReceipt>> GetFailedReceipts(Folder folder, Destination destination);
+    Task<List<FailedSegment>> GetFailedSegments(Folder folder, Destination destination);
+    Task<LastPosition?> GetLastPosition(Files.File file, Destination destination);
+    void RemoveFailedReceipt(FailedReceipt failedReceipt);
+    void RemoveFailedSegment(FailedSegment failedSegment);
 }

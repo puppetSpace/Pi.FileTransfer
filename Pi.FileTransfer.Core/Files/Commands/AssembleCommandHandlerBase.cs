@@ -3,7 +3,7 @@ using Microsoft.Extensions.Logging;
 using Pi.FileTransfer.Core.Files.Services;
 using Pi.FileTransfer.Core.Folders;
 using Pi.FileTransfer.Core.Interfaces;
-using Pi.FileTransfer.Core.Transfers;
+using Pi.FileTransfer.Core.Receives;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -23,7 +23,7 @@ public abstract class AssembleCommandHandlerBase
 
     protected ILogger Logger { get; }
 
-    protected async Task<string> BuildFile(Folder folder, TransferReceipt transferReceipt, IEnumerable<TransferSegment> transferSegments)
+    protected async Task<string> BuildFile(Folder folder, Receipt transferReceipt, IEnumerable<Segment> transferSegments)
     {
         Logger.BuildingFile(transferReceipt.RelativePath);
         return await _segmentation.BuildFile(folder, transferReceipt.FileId, transferSegments.OrderBy(x => x.Sequencenumber).Select(x => x.Buffer));

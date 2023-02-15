@@ -1,36 +1,29 @@
 ﻿using MediatR;
 using Microsoft.Extensions.Logging;
-using Pi.FileTransfer.Core.Destinations;
-using Pi.FileTransfer.Core.Folders;
-using Pi.FileTransfer.Core.Services;
+using Pi.FileTransfer.Core.Interfaces;
+using Pi.FileTransfer.Core.Receives;
 using Pi.FileTransfer.Core.Transfers.Services;
 
 namespace Pi.FileTransfer.Core.Transfers.Commands;
 public class RetryTransferReceiptCommand : IRequest<Unit>
 {
-    public RetryTransferReceiptCommand(FailedReceipt failedReceipt, Destination destination, Folder folder)
+    public RetryTransferReceiptCommand(FailedReceipt failedReceipt)
     {
         FailedReceipt = failedReceipt;
-        Destination = destination;
-        Folder = folder;
     }
 
     public FailedReceipt FailedReceipt { get; }
 
-    public Destination Destination { get; }
-
-    public Folder Folder { get; }
-
     public class RetryTransferReceiptCommandHandler : IRequestHandler<RetryTransferReceiptCommand>
     {
         private readonly TransferService _transferService;
-        private readonly DataStore _transferStore;
+        private readonly IFileTransferRepository _fileTransferRepository;
         private readonly ILogger<RetryTransferReceiptCommand> _logger;
 
-        public RetryTransferReceiptCommandHandler(TransferService transferService, DataStore transferStore, ILogger<RetryTransferReceiptCommand> logger)
+        public RetryTransferReceiptCommandHandler(TransferService transferService, IFileTransferRepository fileTransferRepository, ILogger<RetryTransferReceiptCommand> logger)
         {
             _transferService = transferService;
-            _transferStore = transferStore;
+            _fileTransferRepository = fileTransferRepository;
             _logger = logger;
         }
 
@@ -38,18 +31,15 @@ public class RetryTransferReceiptCommand : IRequest<Unit>
         {
             try
             {
-                var file = request.Folder.Files.SingleOrDefault(x => x.Id == request.FailedReceipt.FileId);
-                if (file is not null)
-                {
-                    _logger.RetryTransferReceipt(request.FailedReceipt.FileId, request.Folder.Name, request.Destination.Name);
-                    await _transferService.SendReceipt(request.Destination, new TransferReceipt(request.FailedReceipt.FileId, file.RelativePath, request.FailedReceipt.TotalAmountOfSegments, request.Folder.Name, request.FailedReceipt.IsFileUpdate));
-                    _transferStore.DeleteFailedReceipt(request.Destination, request.Folder, request.FailedReceipt);
-                }
+                _logger.RetryTransferReceipt(request.FailedReceipt.File.GetFullPath(), request.FailedReceipt.Destination.Name);
+                await _transferService.SendReceipt(request.FailedReceipt.Destination, new Receipt(request.FailedReceipt.File.Id, request.FailedReceipt.File.Folder.Name, request.FailedReceipt.File.RelativePath, request.FailedReceipt.TotalAmountOfSegments, request.FailedReceipt.IsFileUpdate));
+                _fileTransferRepository.RemoveFailedReceipt(request.FailedReceipt);
+                await _fileTransferRepository.UnitOfWork.SaveChangesAsync(cancellationToken);
 
             }
             catch (Exception ex)
             {
-                _logger.FailedRetryTransferReceipt(request.FailedReceipt.FileId, request.Folder.Name, request.Destination.Name, ex);
+                _logger.FailedRetryTransferReceipt(request.FailedReceipt.File.GetFullPath(), request.FailedReceipt.Destination.Name, ex);
             }
 
             return Unit.Value;

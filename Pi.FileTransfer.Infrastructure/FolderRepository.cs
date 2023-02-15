@@ -1,10 +1,6 @@
-﻿using MediatR;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Options;
-using Pi.FileTransfer.Core.Common;
-using Pi.FileTransfer.Core.Destinations;
+﻿using Microsoft.EntityFrameworkCore;
 using Pi.FileTransfer.Core.Folders;
+using Pi.FileTransfer.Core.Folders.Events;
 using Pi.FileTransfer.Core.Interfaces;
 
 namespace Pi.FileTransfer.Infrastructure;
@@ -26,6 +22,7 @@ internal class FolderRepository : IFolderRepository
             .Folders
             .Include(x => x.Destinations)
             .Include(x => x.Files)
+            .AsNoTracking()
             .ToListAsync();
     }
 
@@ -39,6 +36,7 @@ internal class FolderRepository : IFolderRepository
 
     public void Add(Folder folder)
     {
+        folder.Events.Add(new FolderAddedEvent(folder));
         _fileContext.Folders.Add(folder);
     }
 

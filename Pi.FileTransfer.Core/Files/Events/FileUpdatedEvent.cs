@@ -47,7 +47,6 @@ public class FileUpdatedEvent : INotification
             _logger.ProcessUpdatedFile(notification.File.RelativePath);
             try
             {
-                await FileTransferRepository.ClearLastPosition(notification.File);
                 await _deltaService.CreateDelta(notification.Folder, notification.File);
                 _deltaService.CreateSignature(notification.Folder, notification.File);
 
@@ -71,7 +70,7 @@ public class FileUpdatedEvent : INotification
                 try
                 {
                     Logger.SendReceipt(file.RelativePath, destination.Name);
-                    await TransferService.SendReceipt(destination, new(file.Id, file.RelativePath, totalAmountOfSegments, folder.Name, IsFileUpdate));
+                    await TransferService.SendReceipt(destination, new(file.Id, folder.Name, file.RelativePath, totalAmountOfSegments, IsFileUpdate));
                 }
                 catch (Exception ex)
                 {

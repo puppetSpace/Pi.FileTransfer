@@ -4,21 +4,20 @@ using Microsoft.Extensions.Logging;
 using Pi.FileTransfer.Core.Destinations;
 using Pi.FileTransfer.Core.Folders;
 using Pi.FileTransfer.Core.Interfaces;
-using Pi.FileTransfer.Core.Services;
 using Pi.FileTransfer.Core.Transfers.Commands;
 
 namespace Pi.FileTransfer.Core.BackgroundServices;
 public class RetryService : BackgroundService
 {
     private readonly IFolderRepository _folderRepository;
-    private readonly DataStore _transferStore;
+    private readonly IFileTransferRepository _fileTransferRepository;
     private readonly IMediator _mediator;
     private readonly ILogger<RetryService> _logger;
 
-    public RetryService(IFolderRepository folderRepository, DataStore transferStore, IMediator mediator, ILogger<RetryService> logger)
+    public RetryService(IFolderRepository folderRepository, IFileTransferRepository fileTransferRepository, IMediator mediator, ILogger<RetryService> logger)
     {
         _folderRepository = folderRepository;
-        _transferStore = transferStore;
+        _fileTransferRepository = fileTransferRepository;
         _mediator = mediator;
         _logger = logger;
     }
@@ -27,7 +26,7 @@ public class RetryService : BackgroundService
     {
         while (!stoppingToken.IsCancellationRequested)
         {
-            await foreach (var folder in _folderRepository.GetFolders())
+            foreach (var folder in await _folderRepository.GetFolders())
             {
                 foreach (var destination in folder.Destinations)
                 {
@@ -44,13 +43,13 @@ public class RetryService : BackgroundService
     private async Task RetrySendingSegments(Folder folder, Destination destination)
     {
         _logger.RetrySendingSegments(folder.Name, destination.Name);
-        await foreach (var failure in _transferStore.GetFailedSegments(folder, destination))
+        foreach (var failure in await _fileTransferRepository.GetFailedSegments(folder, destination))
         {
             IRequest<Unit> request;
             if (failure.IsFileUpdate)
-                request = new RetryTransferDeltaSegmentCommand(failure, destination, folder);
+                request = new RetryTransferDeltaSegmentCommand(failure);
             else
-                request = new RetryTransferFileSegmentCommand(failure, destination, folder);
+                request = new RetryTransferFileSegmentCommand(failure);
 
             _ = await _mediator.Send(request);
         }
@@ -59,9 +58,9 @@ public class RetryService : BackgroundService
     private async Task RetrySendingReceipt(Folder folder, Destination destination)
     {
         _logger.RetrySendingReceipts(folder.Name, destination.Name);
-        await foreach (var failure in _transferStore.GetFailedReceipts(folder, destination))
+        foreach (var failure in await _fileTransferRepository.GetFailedReceipts(folder, destination))
         {
-            _ = await _mediator.Send(new RetryTransferReceiptCommand(failure, destination, folder));
+            _ = await _mediator.Send(new RetryTransferReceiptCommand(failure));
         }
     }
 
@@ -69,8 +68,12 @@ public class RetryService : BackgroundService
     {
         foreach (var file in folder.Files)
         {
-            _logger.RetrySendingFileFromLastPosition(file.Name, folder.Name, destination.Name);
-            _ = await _mediator.Send(new RestartTransferFileCommand(file, folder, destination));
+            var lastPosition = await _fileTransferRepository.GetLastPosition(file, destination);
+            if (lastPosition is not null)
+            {
+                _logger.RetrySendingFileFromLastPosition(file.Name, folder.Name, destination.Name);
+                _ = await _mediator.Send(new RestartTransferFileCommand(file, folder, destination, lastPosition.ReadBytes));
+            }
         }
     }
 }

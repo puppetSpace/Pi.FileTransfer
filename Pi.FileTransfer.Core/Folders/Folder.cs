@@ -36,25 +36,16 @@ public class Folder : EntityBase
         _files.Remove(file);
     }
 
-    public void AddFile(string path, DateTime lastModified)
-    {
-        var entity = new Files.File(Path.GetFileNameWithoutExtension(path)
-            , Path.GetExtension(path)
-            , path.Replace($"{FullName}{Path.DirectorySeparatorChar}", "")
-            , lastModified);
-
-        _files.Add(entity);
-        Events.Add(new FileAddedEvent(entity, this));
-    }
-
-    public void AddFile(Files.File file)
+    public void AddFile(Files.File file, bool withEvent = false)
     {
         _files.Add(file);
+        if(withEvent)
+            Events.Add(new FileAddedEvent(file, this));
     }
 
     public void UpdateFile(Files.File file)
     {
-        var existing = _files.FirstOrDefault(x => x.GetFullPath(this) == file.GetFullPath(this));
+        var existing = _files.FirstOrDefault(x => x.GetFullPath() == file.GetFullPath());
         if (existing is not null)
         {
             existing.UpdateLastModified(file.LastModified);
@@ -63,7 +54,7 @@ public class Folder : EntityBase
 
     public void UpdateFile(string path, DateTime lastModified)
     {
-        var existing = _files.FirstOrDefault(x => x.GetFullPath(this) == path);
+        var existing = _files.FirstOrDefault(x => x.GetFullPath() == path);
         if (existing is not null)
         {
             existing.UpdateLastModified(lastModified);

@@ -101,13 +101,19 @@ public static partial class LoggerExtensionsAddFileCommand
     EventId = 7,
     Level = LogLevel.Error,
     Message = "Failed to process file '{File}'")]
-    public static partial void FailedToProcessFile(this ILogger logger, string file,Exception exception);
+    public static partial void FailedToProcessFile(this ILogger logger, string file, Exception exception);
 
     [LoggerMessage(
     EventId = 8,
     Level = LogLevel.Error,
     Message = "Failed to process file for retry '{File}' to '{Destination}'")]
-    public static partial void FailedToRetryProcessOfFile(this ILogger logger, string file, string destination , Exception exception);
+    public static partial void FailedToRetryProcessOfFile(this ILogger logger, string file, string destination, Exception exception);
+
+    [LoggerMessage(
+    EventId = 9,
+    Level = LogLevel.Error,
+    Message = "Failed to process file '{File}' for destination '{Destination}'")]
+    public static partial void FailedToProcessFileForDestination(this ILogger logger, string file,string destination, Exception exception);
 }
 
 public static partial class LoggerExtensionsAssembleFileCommand
@@ -160,14 +166,14 @@ public static partial class LoggerExtensionsRetryTransferReceiptCommand
     [LoggerMessage(
     EventId = 0,
     Level = LogLevel.Information,
-    Message = "Retry sending receipt of file with id '{FileId}' from folder '{Folder}' for destination '{Destination}'")]
-    public static partial void RetryTransferReceipt(this ILogger logger, Guid fileId, string folder, string destination);
+    Message = "Retry sending receipt of file '{File}' for destination '{Destination}'")]
+    public static partial void RetryTransferReceipt(this ILogger logger, string file, string destination);
 
     [LoggerMessage(
     EventId = 1,
     Level = LogLevel.Error,
-    Message = "Failed to retry sending receipt of file with id {FileId}' from folder '{Folder}' for destination '{Destination}'")]
-    public static partial void FailedRetryTransferReceipt(this ILogger logger, Guid fileId, string folder, string destination, Exception exception);
+    Message = "Failed to retry sending receipt of file {File}' for destination '{Destination}'")]
+    public static partial void FailedRetryTransferReceipt(this ILogger logger, string file, string destination, Exception exception);
 }
 
 public static partial class LoggerExtensionsRetryTransferSegmentCommand
@@ -175,8 +181,8 @@ public static partial class LoggerExtensionsRetryTransferSegmentCommand
     [LoggerMessage(
     EventId = 0,
     Level = LogLevel.Information,
-    Message = "Retry sending segment {Sequencenumber} of file with id '{FileId}' from folder '{Folder}' for destination '{Destination}'")]
-    public static partial void RetryTransferSegment(this ILogger logger, int sequencenumber, Guid fileId, string folder, string destination);
+    Message = "Retry sending segment {Sequencenumber} of file '{File}' to destination '{Destination}'")]
+    public static partial void RetryTransferSegment(this ILogger logger, int sequencenumber, string file, string destination);
 
     [LoggerMessage(
     EventId = 3,
@@ -187,8 +193,8 @@ public static partial class LoggerExtensionsRetryTransferSegmentCommand
     [LoggerMessage(
     EventId = 1,
     Level = LogLevel.Error,
-    Message = "Failed to retry sending segment {Sequencenumber} of file with id '{FileId}' from folder '{Folder}' for destination '{Destination}'")]
-    public static partial void FailedRetryTransferSegment(this ILogger logger, int sequencenumber, Guid fileId, string folder, string destination, Exception exception);
+    Message = "Failed to retry sending segment {Sequencenumber} of file '{File}' for destination '{Destination}'")]
+    public static partial void FailedRetryTransferSegment(this ILogger logger, int sequencenumber, string file, string destination, Exception exception);
 
     [LoggerMessage(
     EventId = 2,

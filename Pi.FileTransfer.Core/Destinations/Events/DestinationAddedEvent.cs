@@ -5,6 +5,7 @@ using Pi.FileTransfer.Core.Destinations;
 using Pi.FileTransfer.Core.Files.Events;
 using Pi.FileTransfer.Core.Files.Services;
 using Pi.FileTransfer.Core.Folders;
+using Pi.FileTransfer.Core.Interfaces;
 using Pi.FileTransfer.Core.Services;
 using Pi.FileTransfer.Core.Transfers.Services;
 using System;
@@ -31,8 +32,8 @@ public class DestinationAddedEvent : INotification
         private readonly FileSegmentation _fileSegmentation;
         private readonly DeltaService _deltaService;
 
-        public DestinationAddedEventHandler(FileSegmentation fileSegmentation, DeltaService deltaService, ILogger<DestinationAddedEvent> logger, TransferService transferService, DataStore dataStore)
-            : base(logger, transferService, dataStore, false)
+        public DestinationAddedEventHandler(FileSegmentation fileSegmentation, DeltaService deltaService, ILogger<DestinationAddedEvent> logger, TransferService transferService, IFileTransferRepository fileTransferRepository)
+            : base(logger, transferService, fileTransferRepository, false)
         {
             _fileSegmentation = fileSegmentation;
             _deltaService = deltaService;
@@ -43,9 +44,20 @@ public class DestinationAddedEvent : INotification
             Logger.ProcessingAllFilesForDestination(notification.Destination.Name, notification.Folder.Name);
             foreach (var file in notification.Folder.Files)
             {
-                _deltaService.CreateSignature(notification.Folder, file);
-                var totalAmountOfSegments = await _fileSegmentation.Segment(notification.Folder, file, SendSegment);
-                await SendReceipt(notification.Folder, file, totalAmountOfSegments);
+                try
+                {
+                    _deltaService.CreateSignature(notification.Folder, file);
+                    var totalAmountOfSegments = await _fileSegmentation.Segment(notification.Folder, file, SendSegment);
+                    await SendReceipt(notification.Folder, file, totalAmountOfSegments);
+                }
+                catch (Exception ex)
+                {
+                    Logger.FailedToProcessFileForDestination(file.GetFullPath(), notification.Destination.Name, ex);
+                }
+                finally
+                {
+                    await FileTransferRepository.UnitOfWork.SaveChangesAsync(cancellationToken);
+                }
             }
         }
 
@@ -56,12 +68,12 @@ public class DestinationAddedEvent : INotification
                 try
                 {
                     Logger.SendReceipt(file.RelativePath, destination.Name);
-                    await TransferService.SendReceipt(destination, new Transfers.TransferReceipt(file.Id, file.RelativePath, totalAmountOfSegments, folder.Name, IsFileUpdate));
+                    await TransferService.SendReceipt(destination, new Receives.Receipt(file.Id, folder.Name, file.RelativePath, totalAmountOfSegments, IsFileUpdate));
                 }
                 catch (Exception ex)
                 {
                     Logger.SendReceiptFailed(file.RelativePath, destination.Name, ex);
-                    await DataStore.StoreFailedReceiptTransfer(destination, folder, file, totalAmountOfSegments, IsFileUpdate);
+                    FileTransferRepository.AddFailedReceipt(new(file,destination, totalAmountOfSegments, IsFileUpdate));
                 }
             }
         }

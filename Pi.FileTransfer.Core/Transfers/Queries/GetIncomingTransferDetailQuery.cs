@@ -14,7 +14,7 @@ public class GetIncomingTransferDetailQuery : IRequest<IncomingTransferDetail>
     public string FolderName { get; }
 
 
-    public class GetIncomingTransferDetailQueryHandler : IRequestHandler<GetIncomingTransferDetailQuery, IncomingTransferDetail>
+    internal class GetIncomingTransferDetailQueryHandler : IRequestHandler<GetIncomingTransferDetailQuery, IncomingTransferDetail>
     {
         private readonly IFolderRepository _folderRepository;
         private readonly DataStore _dataStore;
@@ -27,10 +27,13 @@ public class GetIncomingTransferDetailQuery : IRequest<IncomingTransferDetail>
 
         public async Task<IncomingTransferDetail> Handle(GetIncomingTransferDetailQuery request, CancellationToken cancellationToken)
         {
-            var folder = await _folderRepository.GetFolder(request.FolderName);
-            if (folder == Folder.Empty)
-                return new IncomingTransferDetail(0, 0);
-            return new IncomingTransferDetail(_dataStore.GetReceivedSegmentsCount(folder), _dataStore.GetReceivedReceiptsCount(folder));
+            //todo use query
+            //var folder = await _folderRepository.GetFolder(request.FolderName);
+            //if (folder == Folder.Empty)
+            //    return new IncomingTransferDetail(0, 0);
+            //return new IncomingTransferDetail(_dataStore.GetReceivedSegmentsCount(folder), _dataStore.GetReceivedReceiptsCount(folder));
+            return new IncomingTransferDetail(0, 0);
+
         }
     }
 }

@@ -17,10 +17,10 @@ public class FileSegmentation : Segmentation
 {
     private readonly IFileSystem _fileSystem;
 
-    public FileSegmentation(IFileSystem fileSystem, DataStore dataStore, IOptions<AppSettings> options, ILogger<FileSegmentation> logger) : base(fileSystem, dataStore, options, logger)
+    public FileSegmentation(IFileSystem fileSystem, IOptions<AppSettings> options, ILogger<FileSegmentation> logger) : base(fileSystem, options, logger)
     {
         _fileSystem = fileSystem;
     }
 
-    protected override Stream GetStream(Folder folder, File file) => _fileSystem.GetReadFileStream(file.GetFullPath(folder));
+    protected override Stream GetStream(File file) => _fileSystem.GetReadFileStream(file.GetFullPath());
 }

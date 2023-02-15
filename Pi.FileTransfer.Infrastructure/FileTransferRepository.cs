@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Pi.FileTransfer.Core.Destinations;
+using Pi.FileTransfer.Core.Folders;
 using Pi.FileTransfer.Core.Interfaces;
 using Pi.FileTransfer.Core.Transfers;
 using System;
@@ -18,7 +19,6 @@ internal class FileTransferRepository : IFileTransferRepository
         _fileContext = fileContext;
     }
 
-
     public void AddFailedReceipt(FailedReceipt failedReceipt)
     {
         _fileContext.FailedReceipts.Add(failedReceipt);
@@ -27,6 +27,40 @@ internal class FileTransferRepository : IFileTransferRepository
     public void AddFailedSegment(FailedSegment failedSegment)
     {
         _fileContext.FailedSegments.Add(failedSegment);
+    }
+
+    public void RemoveFailedReceipt(FailedReceipt failedReceipt)
+    {
+        _fileContext.Remove(failedReceipt);
+    }
+
+    public void RemoveFailedSegment(FailedSegment failedSegment)
+    {
+        _fileContext.Remove(failedSegment);
+    }
+
+    public async Task<List<FailedSegment>> GetFailedSegments(Folder folder, Destination destination)
+    {
+        return await _fileContext
+            .FailedSegments
+            .Include(x=>x.File)
+            .ThenInclude(x=>x.Folder)
+            .Include(x=>x.Destination)
+            .Where(x => x.File.Folder.Id == folder.Id && x.Destination.Id == destination.Id)
+            .AsNoTracking()
+            .ToListAsync();
+    }
+
+    public async Task<List<FailedReceipt>> GetFailedReceipts(Folder folder, Destination destination)
+    {
+        return await _fileContext
+            .FailedReceipts
+            .Include(x => x.File)
+            .ThenInclude(x => x.Folder)
+            .Include(x => x.Destination)
+            .Where(x => x.File.Folder.Id == folder.Id && x.Destination.Id == destination.Id)
+            .AsNoTracking()
+            .ToListAsync();
     }
 
     public async Task AddOrUpdateLastPosition(LastPosition lastPosition)
@@ -48,13 +82,13 @@ internal class FileTransferRepository : IFileTransferRepository
             _fileContext.LastPositions.Remove(foundPosition);
     }
 
-    public async Task<LastPosition> GetLastPosition(Core.Files.File file, Destination destination)
+    public async Task<LastPosition?> GetLastPosition(Core.Files.File file, Destination destination)
     {
-        var foundLastPosition = await _fileContext.LastPositions.FirstOrDefaultAsync(x=>x.File.Id == file.Id &&  x.Destination.Id == destination.Id);
+        var foundLastPosition = await _fileContext.LastPositions.AsNoTracking().FirstOrDefaultAsync(x=>x.File.Id == file.Id &&  x.Destination.Id == destination.Id);
         if(foundLastPosition is not null)
             return foundLastPosition;
 
-        return new LastPosition(file, destination, 0);
+        return null;
     }
 
     public IUnitOfWork UnitOfWork => _fileContext;

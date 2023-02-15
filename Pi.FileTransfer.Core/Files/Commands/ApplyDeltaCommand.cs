@@ -4,8 +4,8 @@ using Pi.FileTransfer.Core;
 using Pi.FileTransfer.Core.Files.Services;
 using Pi.FileTransfer.Core.Folders;
 using Pi.FileTransfer.Core.Interfaces;
+using Pi.FileTransfer.Core.Receives;
 using Pi.FileTransfer.Core.Services;
-using Pi.FileTransfer.Core.Transfers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,18 +16,18 @@ namespace Pi.FileTransfer.Core.Files.Commands;
 public class ApplyDeltaCommand : IRequest<Unit>
 {
 
-    public ApplyDeltaCommand(Folder folder, TransferReceipt transferReceipt, IEnumerable<TransferSegment> transferSegments)
+    public ApplyDeltaCommand(Folder folder, Receipt transferReceipt, IEnumerable<Segment> transferSegments)
     {
         TransferReceipt = transferReceipt;
         Folder = folder;
         TransferSegments = transferSegments;
     }
 
-    public TransferReceipt TransferReceipt { get; }
+    public Receipt TransferReceipt { get; }
     public Folder Folder { get; }
-    public IEnumerable<TransferSegment> TransferSegments { get; }
+    public IEnumerable<Segment> TransferSegments { get; }
 
-    public class ApplyDeltaCommandHandler : AssembleCommandHandlerBase, IRequestHandler<ApplyDeltaCommand>
+    internal class ApplyDeltaCommandHandler : AssembleCommandHandlerBase, IRequestHandler<ApplyDeltaCommand>
     {
         private readonly DataStore _dataStore;
         private readonly DeltaService _deltaService;

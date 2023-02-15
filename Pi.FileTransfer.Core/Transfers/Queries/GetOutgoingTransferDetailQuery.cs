@@ -18,28 +18,29 @@ public class GetOutgoingTransferDetailQuery : IRequest<IEnumerable<OutgoingTrans
     public class GetTransferDetailQueryHandler : IRequestHandler<GetOutgoingTransferDetailQuery, IEnumerable<OutgoingTransferDetail>>
     {
         private readonly IFolderRepository _folderRepository;
-        private readonly DataStore _dataStore;
+        private readonly IFileTransferRepository _fileTransferRepository;
 
-        public GetTransferDetailQueryHandler(IFolderRepository folderRepository, DataStore dataStore)
+        public GetTransferDetailQueryHandler(IFolderRepository folderRepository, IFileTransferRepository fileTransferRepository)
         {
             _folderRepository = folderRepository;
-            _dataStore = dataStore;
+            _fileTransferRepository = fileTransferRepository;
         }
 
         public async Task<IEnumerable<OutgoingTransferDetail>> Handle(GetOutgoingTransferDetailQuery request, CancellationToken cancellationToken)
         {
+            //todo change this with a query
             var folder = await _folderRepository.GetFolder(request.FolderName);
             if (folder == Folder.Empty)
                 return new List<OutgoingTransferDetail>();
             var details = new List<OutgoingTransferDetail>();
             foreach (var destination in folder.Destinations)
             {
-                var failedSegments = await _dataStore.GetFailedSegments(folder, destination).ToListAsync(cancellationToken: cancellationToken);
-                var failedReceipts = await _dataStore.GetFailedReceipts(folder, destination).ToListAsync(cancellationToken: cancellationToken);
+                var failedSegments = await _fileTransferRepository.GetFailedSegments(folder, destination);
+                var failedReceipts = await _fileTransferRepository.GetFailedReceipts(folder, destination);
                 foreach (var file in folder.Files)
                 {
-                    var readTill = await _dataStore.GetLastPosition(folder, destination, file.Id);
-                    details.Add(new(file.Id, destination.Name, readTill, failedSegments.Where(x => x.FileId == file.Id).ToList(), failedReceipts.Any(x => x.FileId == file.Id)));
+                    var lastPosition = await _fileTransferRepository.GetLastPosition(file,destination);
+                    details.Add(new(file.Id, destination.Name, lastPosition?.ReadBytes, failedSegments.Where(x => x.File.Id == file.Id).ToList(), failedReceipts.Any(x => x.File.Id == file.Id)));
                 }
             }
             return details;

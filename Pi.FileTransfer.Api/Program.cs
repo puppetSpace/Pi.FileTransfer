@@ -3,8 +3,8 @@ using Pi.FileTransfer.Core;
 using Pi.FileTransfer.Core.Destinations;
 using Pi.FileTransfer.Core.Destinations.Commands;
 using Pi.FileTransfer.Core.Folders.Queries;
-using Pi.FileTransfer.Core.Transfers;
-using Pi.FileTransfer.Core.Transfers.Commands;
+using Pi.FileTransfer.Core.Receives;
+using Pi.FileTransfer.Core.Receives.Commands;
 using Pi.FileTransfer.Core.Transfers.Queries;
 using Pi.FileTransfer.Infrastructure;
 
@@ -28,12 +28,12 @@ app.UseHttpsRedirection();
 
 var apiEndpoint = app.MapGroup("api");
 
-apiEndpoint.MapPost("/file/segment", async (TransferSegment data, IMediator mediator) =>
+apiEndpoint.MapPost("/file/segment", async (Segment data, IMediator mediator) =>
 {
     await mediator.Send(new StoreReceivedSegmentCommand(data));
 });
 
-apiEndpoint.MapPost("/file/receipt", async (TransferReceipt data, IMediator mediator) =>
+apiEndpoint.MapPost("/file/receipt", async (Receipt data, IMediator mediator) =>
 {
     await mediator.Send(new StoreReceivedReceiptCommand(data));
 });
