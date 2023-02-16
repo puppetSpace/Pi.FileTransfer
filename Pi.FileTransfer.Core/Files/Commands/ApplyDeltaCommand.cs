@@ -61,7 +61,8 @@ public class ApplyDeltaCommand : IRequest<Unit>
                     , Path.GetExtension(request.TransferReceipt.RelativePath)
                     , request.TransferReceipt.RelativePath
                     , Path.GetFileName(request.TransferReceipt.RelativePath)
-                    , newLastWriteTime);
+                    , newLastWriteTime
+                    , request.TransferReceipt.Version);
 
                 request.Folder.AddFile(file);
                 _folderRepository.Update(request.Folder);

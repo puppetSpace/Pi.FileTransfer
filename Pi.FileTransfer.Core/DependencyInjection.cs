@@ -9,6 +9,9 @@ using Pi.FileTransfer.Core.Interfaces;
 using Pi.FileTransfer.Core.Services;
 using Pi.FileTransfer.Core.Transfers.Services;
 using System.Reflection;
+using System.Runtime.CompilerServices;
+
+[assembly: InternalsVisibleTo("Pi.FileTransfer.Test")]
 
 namespace Pi.FileTransfer.Core;
 public static class DependencyInjection

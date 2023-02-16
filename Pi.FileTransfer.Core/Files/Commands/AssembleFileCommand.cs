@@ -50,7 +50,8 @@ public class AssembleFileCommand : IRequest<Unit>
                     , Path.GetExtension(request.TransferReceipt.RelativePath)
                     , request.TransferReceipt.RelativePath
                     , Path.GetFileName(request.TransferReceipt.RelativePath)
-                    , new FileInfo(destination).LastWriteTimeUtc);
+                    , new FileInfo(destination).LastWriteTimeUtc
+                    , request.TransferReceipt.Version);
                 request.Folder.AddFile(file);
                 _folderRepository.Update(request.Folder);
                 await _folderRepository.UnitOfWork.SaveChangesAsync(cancellationToken);

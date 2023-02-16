@@ -43,21 +43,12 @@ public class Folder : EntityBase
             Events.Add(new FileAddedEvent(file, this));
     }
 
-    public void UpdateFile(Files.File file)
-    {
-        var existing = _files.FirstOrDefault(x => x.GetFullPath() == file.GetFullPath());
-        if (existing is not null)
-        {
-            existing.UpdateLastModified(file.LastModified);
-        }
-    }
-
     public void UpdateFile(string path, DateTime lastModified)
     {
         var existing = _files.FirstOrDefault(x => x.GetFullPath() == path);
         if (existing is not null)
         {
-            existing.UpdateLastModified(lastModified);
+            existing.Update(lastModified);
             Events.Add(new FileUpdatedEvent(existing, this));
         }
     }

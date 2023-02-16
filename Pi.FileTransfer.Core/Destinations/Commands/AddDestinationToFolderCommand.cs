@@ -18,7 +18,7 @@ public class AddDestinationToFolderCommand : IRequest<Unit>
     public string Folder { get; }
     public Destination Destination { get; }
 
-    public class AddDestinationToFolderCommandHandler : IRequestHandler<AddDestinationToFolderCommand, Unit>
+    internal class AddDestinationToFolderCommandHandler : IRequestHandler<AddDestinationToFolderCommand, Unit>
     {
         private readonly IFolderRepository _folderRepository;
 

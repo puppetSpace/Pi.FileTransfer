@@ -32,7 +32,7 @@ public class RetryTransferReceiptCommand : IRequest<Unit>
             try
             {
                 _logger.RetryTransferReceipt(request.FailedReceipt.File.GetFullPath(), request.FailedReceipt.Destination.Name);
-                await _transferService.SendReceipt(request.FailedReceipt.Destination, new Receipt(request.FailedReceipt.File.Id, request.FailedReceipt.File.Folder.Name, request.FailedReceipt.File.RelativePath, request.FailedReceipt.TotalAmountOfSegments, request.FailedReceipt.IsFileUpdate));
+                await _transferService.SendReceipt(request.FailedReceipt.Destination, new Receipt(request.FailedReceipt.File.Id, request.FailedReceipt.File.Folder.Name, request.FailedReceipt.File.RelativePath, request.FailedReceipt.TotalAmountOfSegments,request.FailedReceipt.File.Version, request.FailedReceipt.IsFileUpdate));
                 _fileTransferRepository.RemoveFailedReceipt(request.FailedReceipt);
                 await _fileTransferRepository.UnitOfWork.SaveChangesAsync(cancellationToken);
 

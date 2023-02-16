@@ -70,7 +70,7 @@ public class FileUpdatedEvent : INotification
                 try
                 {
                     Logger.SendReceipt(file.RelativePath, destination.Name);
-                    await TransferService.SendReceipt(destination, new(file.Id, folder.Name, file.RelativePath, totalAmountOfSegments, IsFileUpdate));
+                    await TransferService.SendReceipt(destination, new(file.Id, folder.Name, file.RelativePath, totalAmountOfSegments,file.Version, IsFileUpdate));
                 }
                 catch (Exception ex)
                 {
