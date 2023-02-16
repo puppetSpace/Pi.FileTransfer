@@ -29,6 +29,9 @@ public class AddDestinationToFolderCommand : IRequest<Unit>
 
         public async Task<Unit> Handle(AddDestinationToFolderCommand request, CancellationToken cancellationToken)
         {
+            if (request.Destination is null || string.IsNullOrWhiteSpace(request.Folder))
+                return Unit.Value;
+
             var folder = await _folderRepository.GetFolder(request.Folder);
             if (folder is not null)
             {
