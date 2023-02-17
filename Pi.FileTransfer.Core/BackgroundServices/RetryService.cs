@@ -26,7 +26,7 @@ public class RetryService : BackgroundService
     {
         while (!stoppingToken.IsCancellationRequested)
         {
-            foreach (var folder in await _folderRepository.GetFolders())
+            foreach (var folder in await _folderRepository.GetAll())
             {
                 foreach (var destination in folder.Destinations)
                 {

@@ -33,7 +33,7 @@ public class IndexFolderCommand : IRequest<Unit>
             _fileSystem.CreateDirectory(request.Path);
 
             var folderName = System.IO.Path.GetFileName(request.Path);
-            var folder = await _folderRepository.GetFolder(folderName);
+            var folder = await _folderRepository.Get(folderName);
             if (folder is null)
             {
                 _logger.IndexingFolder(request.Path);

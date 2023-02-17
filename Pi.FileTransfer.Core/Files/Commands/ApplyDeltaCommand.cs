@@ -44,17 +44,18 @@ public class ApplyDeltaCommand : IRequest<Unit>
 
         public async Task<Unit> Handle(ApplyDeltaCommand request, CancellationToken cancellationToken)
         {
+            //todo check if delta can be applied with version
             try
             {
-                var tempFile = await BuildFile(request.Folder, request.TransferReceipt, request.TransferSegments);
-                var destination = Path.Combine(request.Folder.FullName, request.TransferReceipt.RelativePath);
-                if (!System.IO.File.Exists(destination))
+                var targetPath = Path.Combine(request.Folder.FullName, request.TransferReceipt.RelativePath);
+                if (!System.IO.File.Exists(targetPath))
                 {
-                    Logger.FileDoesNotExistForApplyingDelta(destination);
+                    Logger.FileDoesNotExistForApplyingDelta(targetPath);
                     return Unit.Value;
                 }
 
-                var newLastWriteTime = _deltaService.ApplyDelta(tempFile, request.Folder, destination);
+                var tempFile = await BuildFile(request.Folder, request.TransferReceipt, request.TransferSegments);
+                var newLastWriteTime = _deltaService.ApplyDelta(tempFile, request.Folder, targetPath);
 
                 var file = new Files.File(request.Folder
                     , request.TransferReceipt.FileId
@@ -68,6 +69,7 @@ public class ApplyDeltaCommand : IRequest<Unit>
                 _folderRepository.Update(request.Folder);
                 await _folderRepository.UnitOfWork.SaveChangesAsync(cancellationToken);
                 _dataStore.DeleteReceivedDataOfFile(request.Folder, request.TransferReceipt.FileId);
+                //todo delete receipt
             }
             catch (Exception ex)
             {

@@ -8,8 +8,8 @@ using System.Threading.Tasks;
 namespace Pi.FileTransfer.Core.Interfaces;
 public interface IFolderRepository : IRepository
 {
-    Task<Folder?> GetFolder(string name);
-    Task<List<Folder>> GetFolders();
+    Task<Folder?> Get(string name);
+    Task<List<Folder>> GetAll();
     void Add(Folder folder);
     void Update(Folder folder);
 }

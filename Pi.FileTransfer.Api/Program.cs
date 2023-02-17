@@ -47,9 +47,9 @@ managementEndPoint.MapGet("/folders/{folder}/outgoing/details", async (IMediator
 {
     return await mediator.Send(new GetOutgoingTransferDetailQuery(folder));
 });
-managementEndPoint.MapPost("/folders/{folder}/destination", async (IMediator mediator, Destination destination, string folder) =>
+managementEndPoint.MapPost("/folders/{folder}/destination", async (IMediator mediator, Guid destinationId, string folder) =>
 {
-    await mediator.Send(new AddDestinationToFolderCommand(folder, destination));
+    await mediator.Send(new AddDestinationToFolderCommand(folder, destinationId));
 });
 managementEndPoint.MapDelete("/folders/{folder}/destination/{destination}", async (IMediator mediator, string folder, string destination) =>
 {
@@ -60,5 +60,16 @@ managementEndPoint.MapGet("/folders/{folder}/incoming/details", async (IMediator
     return await mediator.Send(new GetIncomingTransferDetailQuery(folder));
 });
 
+managementEndPoint.MapPost("/destinations", async (IMediator mediator, DestinationDto destination) =>
+{
+    return await mediator.Send(new AddDestinationCommand(destination));
+});
+
+managementEndPoint.MapDelete("/destinations/{id}", async (IMediator mediator, Guid id) =>
+{
+    return await mediator.Send(new DeleteDestinationCommand(id));
+});
+
 app.Run();
 
+//todo destination dto?

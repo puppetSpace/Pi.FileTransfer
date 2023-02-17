@@ -47,7 +47,7 @@ public class IndexerService : BackgroundService
     private async Task IndexFiles()
     {
         _logger.IndexingFiles();
-        foreach (var folder in await _folderRepository.GetFolders())
+        foreach (var folder in await _folderRepository.GetAll())
         {
             await _mediator.Send(new IndexFilesCommand(folder));
             _folderRepository.Update(folder);

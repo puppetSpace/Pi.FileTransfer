@@ -9,33 +9,36 @@ using System.Threading.Tasks;
 namespace Pi.FileTransfer.Core.Destinations.Commands;
 public class AddDestinationToFolderCommand : IRequest<Unit>
 {
-    public AddDestinationToFolderCommand(string folder, Destination destination)
+    public AddDestinationToFolderCommand(string folder, Guid destinationId)
     {
         Folder = folder;
-        Destination = destination;
+        DestinationId = destinationId;
     }
 
     public string Folder { get; }
-    public Destination Destination { get; }
+    public Guid DestinationId { get; }
 
     internal class AddDestinationToFolderCommandHandler : IRequestHandler<AddDestinationToFolderCommand, Unit>
     {
         private readonly IFolderRepository _folderRepository;
+        private readonly IDestinationRepository _destinationRepository;
 
-        public AddDestinationToFolderCommandHandler(IFolderRepository folderRepository)
+        public AddDestinationToFolderCommandHandler(IFolderRepository folderRepository, IDestinationRepository destinationRepository)
         {
             _folderRepository = folderRepository;
+            _destinationRepository = destinationRepository;
         }
 
         public async Task<Unit> Handle(AddDestinationToFolderCommand request, CancellationToken cancellationToken)
         {
-            if (request.Destination is null || string.IsNullOrWhiteSpace(request.Folder))
+            if (request.DestinationId == Guid.Empty || string.IsNullOrWhiteSpace(request.Folder))
                 return Unit.Value;
 
-            var folder = await _folderRepository.GetFolder(request.Folder);
-            if (folder is not null)
+            var folder = await _folderRepository.Get(request.Folder);
+            var destination = await _destinationRepository.Get(request.DestinationId);
+            if (folder is not null && destination is not null)
             {
-                folder.AddDestination(request.Destination);
+                folder.AddDestination(destination);
                 _folderRepository.Add(folder);
                 await _folderRepository.UnitOfWork.SaveChangesAsync(cancellationToken);
             }

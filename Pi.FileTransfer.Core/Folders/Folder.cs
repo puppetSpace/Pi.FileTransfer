@@ -59,7 +59,7 @@ public class Folder : EntityBase
             throw new DestinationException($"Destination with name '{destination.Name}' already exists for this folder");
 
         if (Destinations.Any(x => string.Equals(x.Address, destination.Address, StringComparison.OrdinalIgnoreCase)))
-            throw new InvalidOperationException($"Destination with address '{destination.Address}' already exists for this folder");
+            throw new DestinationException($"Destination with address '{destination.Address}' already exists for this folder");
 
         _destinations.Add(destination);
 

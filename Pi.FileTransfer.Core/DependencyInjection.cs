@@ -29,7 +29,7 @@ public static class DependencyInjection
         services.AddSingleton<FolderState>(x =>
         {
             var folderRepository = x.GetRequiredService<IFolderRepository>();
-            return new FolderState( folderRepository.GetFolders().GetAwaiter().GetResult());
+            return new FolderState( folderRepository.GetAll().GetAwaiter().GetResult());
         });
         services.AddHttpClient(TransferService.HttpClientName, o =>
         {

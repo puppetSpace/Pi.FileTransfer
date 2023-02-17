@@ -30,7 +30,7 @@ public class DeleteDestinationFromFolderCommand : IRequest<Unit>
 
         public async Task<Unit> Handle(DeleteDestinationFromFolderCommand request, CancellationToken cancellationToken)
         {
-            var folder = await _folderRepository.GetFolder(request.Folder);
+            var folder = await _folderRepository.Get(request.Folder);
             if (folder is not null)
             {
                 folder.DeleteDestination(request.Destination);

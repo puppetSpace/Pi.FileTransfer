@@ -17,7 +17,7 @@ public class GetFoldersQuery : IRequest<IEnumerable<Folder>>
 
         public async Task<IEnumerable<Folder>> Handle(GetFoldersQuery request, CancellationToken cancellationToken)
         {
-            var result = await _folderRepository.GetFolders();
+            var result = await _folderRepository.GetAll();
             return result;
         }
     }

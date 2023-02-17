@@ -16,7 +16,7 @@ internal class FolderRepository : IFolderRepository
     public IUnitOfWork UnitOfWork => _fileContext;
 
 
-    public async Task<List<Folder>> GetFolders()
+    public async Task<List<Folder>> GetAll()
     {
         return await _fileContext
             .Folders
@@ -26,7 +26,7 @@ internal class FolderRepository : IFolderRepository
             .ToListAsync();
     }
 
-    public async Task<Folder?> GetFolder(string name)
+    public async Task<Folder?> Get(string name)
     {
         return await _fileContext
             .Folders

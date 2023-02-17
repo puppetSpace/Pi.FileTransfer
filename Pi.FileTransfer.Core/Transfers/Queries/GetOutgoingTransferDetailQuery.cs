@@ -29,7 +29,7 @@ public class GetOutgoingTransferDetailQuery : IRequest<IEnumerable<OutgoingTrans
         public async Task<IEnumerable<OutgoingTransferDetail>> Handle(GetOutgoingTransferDetailQuery request, CancellationToken cancellationToken)
         {
             //todo change this with a query
-            var folder = await _folderRepository.GetFolder(request.FolderName);
+            var folder = await _folderRepository.Get(request.FolderName);
             if (folder == Folder.Empty)
                 return new List<OutgoingTransferDetail>();
             var details = new List<OutgoingTransferDetail>();

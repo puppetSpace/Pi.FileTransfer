@@ -27,7 +27,7 @@ internal class FileAssemblerService : BackgroundService
     {
         while (!stoppingToken.IsCancellationRequested)
         {
-            foreach (var folder in await _folderRepository.GetFolders())
+            foreach (var folder in await _folderRepository.GetAll())
             {
                 _logger.SearchReceiptInFolder(folder.FullName);
                 foreach (var receipt in await _fileReceiveRepository.GetReceipts(folder.Name))
